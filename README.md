@@ -1,4 +1,4 @@
-# KOMBAT
+
 <h1 align='center'>
   Kickstart Offense with Minion's Best in an Amicable Territory (KOMBAT)
 </h1><br><br>
