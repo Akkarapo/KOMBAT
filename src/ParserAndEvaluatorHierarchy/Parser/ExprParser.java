@@ -1,9 +1,9 @@
-package com.example.demo.Parser;
+package com.example.demo.src.ParserAndEvaluatorHierarchy.Parser;
 
 import com.example.demo.AST.Expression.Number;
 import com.example.demo.AST.Expression.*;
 import com.example.demo.Exception.*;
-import com.example.demo.Tokenizer.Tokenizer;
+import com.example.demo.src.ParserAndEvaluatorHierarchy.Tokenizer.Tokenizer;
 
 import static java.lang.Character.isDigit;
 

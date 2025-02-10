@@ -1,7 +1,5 @@
-package com.example.demo.Parser;
+package com.example.demo.src.ParserAndEvaluatorHierarchy.Parser;
 
-import com.example.demo.AST.Node;
-import com.example.demo.Exception.SyntaxError;
 import com.example.demo.AST.Node;
 import com.example.demo.Exception.SyntaxError;
 

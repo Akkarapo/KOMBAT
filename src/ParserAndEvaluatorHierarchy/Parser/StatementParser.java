@@ -1,4 +1,4 @@
-package com.example.demo.Parser;
+package com.example.demo.src.ParserAndEvaluatorHierarchy.Parser;
 
 import com.example.demo.AST.RestricWord.Command;
 import com.example.demo.AST.RestricWord.Direction;
@@ -7,7 +7,7 @@ import com.example.demo.AST.Expression.Identifier;
 import com.example.demo.AST.Node;
 import com.example.demo.AST.Plan;
 import com.example.demo.Exception.*;
-import com.example.demo.Tokenizer.Tokenizer;
+import com.example.demo.src.ParserAndEvaluatorHierarchy.Tokenizer.Tokenizer;
 import com.example.demo.AST.Statement.*;
 
 import java.util.LinkedList;
