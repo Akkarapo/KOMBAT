@@ -1,13 +1,14 @@
-'use client';
-import HexGrid from "@/components/HexGrid";
+import React from "react";
+import HexGrid from "../components/HexGrid";
 
-export default function Home() {
+const Page = () => {
   return (
-    <div className="hex-container">
-      {/* Player UI */}
+    <div>
       <div className="player-ui player-top">Player 2</div>
       <HexGrid />
       <div className="player-ui player-bottom">Player 1</div>
     </div>
   );
-}
+};
+
+export default Page;

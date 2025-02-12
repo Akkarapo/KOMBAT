@@ -1,54 +1,56 @@
-'use client';
 import React from "react";
 
+const HEX_RADIUS = 40; // ขนาดของหกเหลี่ยม
+const COLS = 8; // จำนวนคอลัมน์
+const ROWS = 8; // จำนวนแถว
+const HEX_WIDTH = 2 * HEX_RADIUS; // ความกว้างของหกเหลี่ยม
+const HEX_HEIGHT = Math.sqrt(3) * HEX_RADIUS; // ความสูงของหกเหลี่ยม
+const X_OFFSET = HEX_WIDTH * 0.75; // ระยะห่างระหว่างหกเหลี่ยมในแนว X
+const Y_OFFSET = HEX_HEIGHT; // ระยะห่างระหว่างหกเหลี่ยมในแนว Y
+
 const HexGrid = () => {
-  const gridSizeX = 8; // ✅ คงไว้ที่ 8 คอลัมน์
-  const gridSizeY = 8; // ✅ คงไว้ที่ 8 แถว
-  const hexSize = 55; // ✅ ขนาดช่องให้พอดีกับพื้นที่
-  const hexWidth = Math.sqrt(3) * hexSize;
-  const hexHeight = 2 * hexSize;
-  const hexSpacingX = hexWidth;
-  const hexSpacingY = hexHeight * 0.75;
-
   const hexagons = [];
-  for (let row = 0; row < gridSizeY; row++) {
-    for (let col = 0; col < gridSizeX; col++) {
-      const x = col * hexSpacingX + (row % 2 === 1 ? hexSpacingX / 2 : 0);
-      const y = row * hexSpacingY + hexSize * 0.5; // ✅ เลื่อนลงมาเล็กน้อยเพื่อให้แถวบนไม่ขาด
 
-      const points = [
-        `0,-${hexSize}`,
-        `${hexWidth / 2},-${hexSize / 2}`,
-        `${hexWidth / 2},${hexSize / 2}`,
-        `0,${hexSize}`,
-        `-${hexWidth / 2},${hexSize / 2}`,
-        `-${hexWidth / 2},-${hexSize / 2}`
-      ].join(" ");
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      // **Flip Horizontal โดยการคำนวณตำแหน่ง X จากขวาไปซ้าย**
+      const x = (COLS - 1 - col) * X_OFFSET;
+      const y = row * Y_OFFSET + (col % 2 === 1 ? Y_OFFSET / 2 : 0);
 
       hexagons.push(
         <polygon
           key={`${row}-${col}`}
-          points={points}
+          points={`  
+            ${HEX_RADIUS * 0.5},0 
+            ${HEX_RADIUS * 1.5},0 
+            ${HEX_RADIUS * 2},${HEX_HEIGHT / 2} 
+            ${HEX_RADIUS * 1.5},${HEX_HEIGHT} 
+            ${HEX_RADIUS * 0.5},${HEX_HEIGHT} 
+            0,${HEX_HEIGHT / 2}
+          `}
           transform={`translate(${x},${y})`}
           stroke="white"
           strokeWidth="2"
-          fill="transparent"
+          fill="none"
         />
       );
     }
   }
 
   return (
-    <div className="hex-container">
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 -${hexSize * 0.5} ${gridSizeX * hexSpacingX + hexSpacingX / 2} ${gridSizeY * hexSpacingY + hexSize * 1.5}`}
-        style={{ transform: "translateX(2%)" }} // ✅ ขยับให้พอดี
-      >
-        {hexagons}
-      </svg>
-    </div>
+    <svg
+      width={COLS * X_OFFSET + HEX_RADIUS}
+      height={ROWS * HEX_HEIGHT + HEX_HEIGHT / 2}
+      viewBox={`0 0 ${COLS * X_OFFSET + HEX_RADIUS} ${ROWS * HEX_HEIGHT + HEX_HEIGHT / 2}`}
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+      }}
+    >
+      {hexagons}
+    </svg>
   );
 };
 
