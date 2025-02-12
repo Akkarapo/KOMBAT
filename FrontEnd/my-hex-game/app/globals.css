@@ -46,22 +46,25 @@ body {
 
 .player-ui {
   position: absolute;
-  padding: 10px 20px;
-  font-size: 20px;
+  padding: 20px 60px; /* ลดขนาด padding */
+  font-size: 18px;   /* ลดขนาดฟอนต์ */
   color: white;
   background: brown;
-  border-radius: 10px;
+  border-radius: 5px; /* ลดขนาด border-radius */
   font-weight: bold;
 }
 
 .player-top {
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 10px;
 }
 
 .player-bottom {
   bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 10px;
+}
+
+polygon {
+  cursor: pointer; /* เปลี่ยนเป็น pointer เพื่อแสดงว่าคลิกได้ */
+  pointer-events: all; /* ให้ polygon ตอบสนองต่อการคลิก */
 }

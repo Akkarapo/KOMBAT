@@ -11,7 +11,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",  // แก้ไขจาก "preserve" เป็น "react-jsx"
     "incremental": true,
     "plugins": [
       {
@@ -21,8 +21,8 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "allowSyntheticDefaultImports": true, // ✅ อนุญาตให้ใช้ default import จากไฟล์ JS
-    "forceConsistentCasingInFileNames": true // ✅ ป้องกันปัญหาชื่อไฟล์ Case Sensitivity
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
