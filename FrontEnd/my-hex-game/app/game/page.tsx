@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import HexGrid from "../../components/HexGrid";
-import Coin from "../../components/coin";
 import Turn from "../../components/Turn";
 
 const Page = () => {
@@ -22,75 +22,43 @@ const Page = () => {
   const [locked, setLocked] = useState<boolean>(false);
   const [currentColor, setCurrentColor] = useState<string>("green");
 
+  const initialGreenHexes = ["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"];
+
   const deductGreenCoin = (amount: number): void => {
     setGreenCoin((prev) => Math.max(0, prev - amount));
-  };
-
-  const deductRedCoin = (amount: number): void => {
-    setRedCoin((prev) => Math.max(0, prev - amount));
   };
 
   const handleAction = () => {
     if (remainingTurns > 0 && canAct) {
       setRemainingTurns((prev) => prev - 1);
-      setCanAct(false);
+      setCanAct(true);
       setLocked(false);
+      setCurrentColor("green");
     }
-  };
-
-  const toggleHexColor = () => {
-    setCurrentColor(currentColor === "green" ? "red" : "green");
   };
 
   return (
     <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
-      
-      {/* Player 2 - บนซ้าย */}
-      <div className="absolute top-4 left-4 bg-gray-300 rounded-lg px-4 py-2 shadow-md text-lg font-bold">
-        Player 2
-      </div>
-
-      {/* Hex Grid - กลางจอ */}
+      <motion.div className="absolute w-[250px] h-[90px]" initial={{ y: "-100px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} style={{ backgroundImage: "url('/playerRed.png')", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", top: "20px", left: "30px" }}>
+        <motion.span className="absolute text-2xl font-bold text-black" initial={{ y: "-20px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 1, ease: "easeOut" }} style={{ top: "25px", left: "100px" }}>Player 2</motion.span>
+      </motion.div>
       <div className="relative w-[600px] h-[600px] flex items-center justify-center">
-        <HexGrid 
-          deductMoney={deductGreenCoin} 
-          greenCoin={greenCoin} 
-          canAct={canAct} 
-          locked={locked} 
-          setLocked={setLocked} 
-          currentColor={currentColor} 
-        />
+        <HexGrid deductMoney={deductGreenCoin} greenCoin={greenCoin} canAct={canAct} locked={locked} setLocked={setLocked} currentColor={currentColor} initialGreenHexes={initialGreenHexes} />
       </div>
-
-      {/* ปุ่มเงิน และปุ่มนาฬิกา - ด้านขวากลางจอ */}
-      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-4">
-        {/* นาฬิกา */}
-        <Turn
-          remainingTurns={remainingTurns}
-          onAction={handleAction}
-          disabled={remainingTurns <= 0 || !canAct}
-          toggleColor={toggleHexColor}
-        />
-
-        {/* เงินของ Player 1 */}
-        <div className="bg-gray-300 rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md">
-          <span className="text-gray-700 font-bold">{greenCoin}</span>
-          <span>💰</span>
-        </div>
+      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+        <div className="text-4xl font-bold text-black">{remainingTurns}</div>
+        <button onClick={handleAction} disabled={remainingTurns <= 0}>
+          <img src="/SandTime.png" alt="Turn Timer" className={`w-[100px] h-[100px] transition-opacity ${remainingTurns <= 0 ? "opacity-50" : "opacity-100 hover:opacity-80"}`} />
+        </button>
       </div>
-
-      {/* Player 1 - ล่างขวา */}
-      <div className="absolute bottom-4 right-4 bg-gray-300 rounded-lg px-4 py-2 shadow-md text-lg font-bold">
-        Player 1
+      <div className="absolute right-14 bottom-72 flex items-center" style={{ gap: '10px' }}>
+        <span className="text-gray-700 text-2xl font-bold">{greenCoin}</span>
+        <img src="/Coin2.png" alt="Coin" className="w-[50px] h-[50px]" />
       </div>
-
-      {/* ปุ่ม Back to Menu - ล่างซ้าย */}
-      <button
-        className="absolute bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-md text-lg font-bold hover:bg-red-700 transition"
-        onClick={() => window.location.href = "/pageMenu"}
-      >
-        Back to Menu
-      </button>
+      <motion.div className="absolute w-[250px] h-[90px]" initial={{ y: "100px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} style={{ backgroundImage: "url('/playerGreen.png')", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", bottom: "20px", right: "30px" }}>
+        <motion.span className="absolute text-2xl font-bold text-black" initial={{ y: "20px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 1, ease: "easeOut" }} style={{ top: "25px", left: "60px" }}>Player 1</motion.span>
+      </motion.div>
+      <button className="absolute bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-md text-lg font-bold hover:bg-red-700 transition" onClick={() => window.location.href = "/pageMenu"}>Back to Menu</button>
     </div>
   );
 };
