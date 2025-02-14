@@ -30,6 +30,7 @@ const HexGrid: React.FC<HexGridProps> = ({
   initialRedHexes = ["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"]
 }) => {
   const [selectedHexes, setSelectedHexes] = useState<Record<string, string>>({});
+  const [pendingHex, setPendingHex] = useState<string | null>(null);
 
   const calculateAdjacentHexes = (currentHexes: Record<string, string>) => {
     const adjacentToGreen: Record<string, string> = Object.create(null);
@@ -83,15 +84,21 @@ const HexGrid: React.FC<HexGridProps> = ({
       alert("Not enough coins!");
       return;
     }
-    setSelectedHexes(prev => {
-      const updated = {...prev, [key]: "#68B671"};
-      return {...updated, ...calculateAdjacentHexes(updated)};
-    });
-    deductMoney(100);
-    setLocked(true);
+    setPendingHex(key);
   };
 
-  // เพิ่ม Event Listener ให้ปุ่ม SandTime เพื่อคำนวณพื้นที่ใหม่
+  const handleBuy = () => {
+    if (pendingHex) {
+      setSelectedHexes(prev => {
+        const updated = {...prev, [pendingHex]: "#68B671"};
+        return {...updated, ...calculateAdjacentHexes(updated)};
+      });
+      deductMoney(100);
+      setLocked(true);
+      setPendingHex(null);
+    }
+  };
+
   React.useEffect(() => {
     const sandTimeButton = document.getElementById("sandTimeButton");
     if (sandTimeButton) {
@@ -141,14 +148,21 @@ const HexGrid: React.FC<HexGridProps> = ({
   }
 
   return (
-    <svg
-      width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS}
-      height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}
-      viewBox={`0 0 ${(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} ${(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}`}
-      style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
-    >
-      {hexagons}
-    </svg>
+    <div style={{ position: "relative" }}>
+      <svg
+        width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS}
+        height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}
+        viewBox={`0 0 ${(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} ${(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}`}
+        style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
+      >
+        {hexagons}
+      </svg>
+      {pendingHex && (
+        <button onClick={handleBuy} style={{ position: "absolute", top: "20px", right: "20px", padding: "10px", backgroundColor: "#B6696B", color: "white", borderRadius: "8px" }}>
+          <span style={{ marginRight: "5px" }}>💰 100</span> BUY
+        </button>
+      )}
+    </div>
   );
 };
 
