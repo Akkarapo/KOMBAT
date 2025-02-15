@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import BuyButton from "../components/BuyButton";
 
 const HEX_RADIUS = 40;
 const COLS = 8;
@@ -69,7 +70,7 @@ const HexGrid: React.FC<HexGridProps> = ({
     return adjacentToGreen;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const initialGreen: Record<string, string> = Object.create(null);
     initialGreenHexes.forEach(key => (initialGreen[key] = "#68B671"));
     const initialRed: Record<string, string> = Object.create(null);
@@ -99,7 +100,7 @@ const HexGrid: React.FC<HexGridProps> = ({
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const sandTimeButton = document.getElementById("sandTimeButton");
     if (sandTimeButton) {
       const handleRecalculate = () => {
@@ -157,11 +158,7 @@ const HexGrid: React.FC<HexGridProps> = ({
       >
         {hexagons}
       </svg>
-      {pendingHex && (
-        <button onClick={handleBuy} style={{ position: "absolute", top: "20px", right: "20px", padding: "10px", backgroundColor: "#B6696B", color: "white", borderRadius: "8px" }}>
-          <span style={{ marginRight: "5px" }}>💰 100</span> BUY
-        </button>
-      )}
+      {pendingHex && <BuyButton onBuy={handleBuy} />}
     </div>
   );
 };
