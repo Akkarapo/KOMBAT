@@ -16,18 +16,14 @@ export default function GameMenu() {
   const [currentCharacter, setCurrentCharacter] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [appearFromTop, setAppearFromTop] = useState(false);
-  const [topCount, setTopCount] = useState(0); // นับจำนวนครั้งที่โผล่จากบนติดกัน
+  const [topCount, setTopCount] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsVisible(false); // ซ่อนตัวเก่าออกจากจอ
-
+      setIsVisible(false);
       setTimeout(() => {
         setCurrentCharacter((prev) => (prev + 1) % characters.length);
-
         let newAppearFromTop = Math.random() < 0.5;
-
-        // ถ้าโผล่จากบนติดกันเกิน 2 ครั้ง ให้ตัวต่อไปโผล่จากล่างเสมอ
         if (topCount >= 2 && newAppearFromTop) {
           newAppearFromTop = false;
           setTopCount(0);
@@ -36,12 +32,10 @@ export default function GameMenu() {
         } else {
           setTopCount(0);
         }
-
         setAppearFromTop(newAppearFromTop);
-        setIsVisible(true); // แสดงตัวใหม่ทันทีหลังจากตัวเก่าหายไปแค่ 1 วินาที
-      }, 1000); // รอแค่ 1 วินาทีก่อนเปลี่ยนตัวใหม่
-    }, 26000); // ตั้งเวลาให้ทำซ้ำทุก 26 วินาที
-
+        setIsVisible(true);
+      }, 1000);
+    }, 26000);
     return () => clearInterval(interval);
   }, [topCount]);
 
@@ -56,56 +50,32 @@ export default function GameMenu() {
         height: "100vh",
       }}
     >
-      <h1 className="absolute top-5 left-10 text-[12rem] font-bold leading-none">KOMBAT</h1>
+      <img src="/Logo.png" alt="KOMBAT Logo" className="absolute top-8 left-10 w-[1000px] h-auto" />
 
       <div className="absolute top-[35%] left-10 flex flex-col space-y-6">
-        <button
-          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
-          onClick={() => router.push("/how-to-duel")}
-        >
-          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">
-            Duel
-          </span>
+        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-duel")}>
+          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Duel</span>
         </button>
-
-        <button
-          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
-          onClick={() => router.push("/how-to-solitaire")}
-        >
-          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">
-            Solitaire
-          </span>
+        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-solitaire")}>
+          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Solitaire</span>
         </button>
-
-        <button
-          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
-          onClick={() => router.push("/how-to-auto")}
-        >
-          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">
-            Auto
-          </span>
+        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-auto")}>
+          <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Auto</span>
         </button>
       </div>
 
-      {/* ตัวละครสุ่มโผล่ขึ้นมาจากขวาล่าง หรือโผล่ลงมาจากขวาบนแบบห้อยหัว */}
       <AnimatePresence mode="wait">
         {isVisible && (
           <motion.div
             key={currentCharacter}
             className="absolute"
-            style={{
-              right: "-50px",
-            }}
-            initial={{ y: appearFromTop ? "-110vh" : "110vh" }} // ถ้าสุ่มได้ true จะเริ่มจากด้านบน
-            animate={{ y: appearFromTop ? "-35vh" : "28vh" }} // ปรับให้โผล่จากบนแค่หัว
-            exit={{ y: appearFromTop ? "-110vh" : "110vh" }} // ถ้าจากบนให้เลื่อนกลับขึ้นไป ถ้าจากล่างให้เลื่อนกลับลงไป
-            transition={{ duration: 3.5, ease: "easeInOut" }} // เคลื่อนไหวช้าๆ
+            style={{ right: "-50px" }}
+            initial={{ y: appearFromTop ? "-110vh" : "110vh" }}
+            animate={{ y: appearFromTop ? "-35vh" : "28vh" }}
+            exit={{ y: appearFromTop ? "-110vh" : "110vh" }}
+            transition={{ duration: 3.5, ease: "easeInOut" }}
           >
-            <img
-              src={appearFromTop ? characters[currentCharacter].flipped : characters[currentCharacter].normal} // ตัวจากบนใช้ flipped, ตัวจากล่างใช้ normal
-              alt="Animated Character"
-              className={appearFromTop ? "w-[350px] h-auto" : "w-[450px] h-auto"} // ขยายตัวละครที่โผล่จากด้านบน
-            />
+            <img src={appearFromTop ? characters[currentCharacter].flipped : characters[currentCharacter].normal} alt="Animated Character" className={appearFromTop ? "w-[350px] h-auto" : "w-[450px] h-auto"} />
           </motion.div>
         )}
       </AnimatePresence>
