@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import BuyButton from "../components/BuyButton";
+import SandTimeButton from "../components/SandTimeButton";
 
 const HEX_RADIUS = 40;
 const COLS = 8;
@@ -100,20 +101,13 @@ const HexGrid: React.FC<HexGridProps> = ({
     }
   };
 
-  useEffect(() => {
-    const sandTimeButton = document.getElementById("sandTimeButton");
-    if (sandTimeButton) {
-      const handleRecalculate = () => {
-        setSelectedHexes(prev => {
-          const greenHexes = Object.fromEntries(Object.entries(prev).filter(([k, v]) => v === "#68B671"));
-          const redHexes = Object.fromEntries(Object.entries(prev).filter(([k, v]) => v === "#B6696B"));
-          return {...greenHexes, ...redHexes, ...calculateAdjacentHexes({...greenHexes, ...redHexes})};
-        });
-      };
-      sandTimeButton.addEventListener("click", handleRecalculate);
-      return () => sandTimeButton.removeEventListener("click", handleRecalculate);
-    }
-  }, []);
+  const handleRecalculate = () => {
+    setSelectedHexes(prev => {
+      const greenHexes = Object.fromEntries(Object.entries(prev).filter(([k, v]) => v === "#68B671"));
+      const redHexes = Object.fromEntries(Object.entries(prev).filter(([k, v]) => v === "#B6696B"));
+      return {...greenHexes, ...redHexes, ...calculateAdjacentHexes({...greenHexes, ...redHexes})};
+    });
+  };
 
   const hexagons: React.ReactElement[] = [];
   for (let row = 1; row <= ROWS; row++) {
@@ -158,7 +152,8 @@ const HexGrid: React.FC<HexGridProps> = ({
       >
         {hexagons}
       </svg>
-      {pendingHex && <BuyButton onBuy={handleBuy} />}
+      {pendingHex && <BuyButton onBuy={handleBuy} />} 
+      <SandTimeButton onRecalculate={handleRecalculate} />
     </div>
   );
 };
