@@ -12,3 +12,28 @@
     <img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" alt="Figma" />
   </a>
 </p>
+
+## Frontend Setup Guide
+
+Front End is currently not merged into Main. Change Branches to FrontEnd.
+
+### Installation
+
+1. go to frontend directory
+   ```sh
+   cd frontend/my-hex-game
+   ```
+2. Install the necessary dependencies:
+
+   ```sh
+   npm install
+   ```
+   
+### Running the Development Server
+
+```sh
+npm run dev
+```
+
+You should see something like this
+![image](https://github.com/user-attachments/assets/6b93504c-5229-4417-90ac-0d9fcdab0e9a)
