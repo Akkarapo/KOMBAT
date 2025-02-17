@@ -93,7 +93,13 @@ public class GameState {
 
                 //check owned hex
                 if(playerChoice == 1){
-                    for (Hex hex : currPlayerHex) System.out.println(hex);
+
+                    for (Hex hex : currPlayerHex){
+                        System.out.println(hex);
+                        System.out.print("Minion : " );
+                        System.out.println(gameBoard[hex.getRow()][hex.getCol()].hasMinion()?"has minion":"Empty");
+                    }
+
                 }
 
                 //Nearby
@@ -143,6 +149,7 @@ public class GameState {
                         Minion minion = new ShadowWarden(config.getInitHP());
                         gameBoard[usingRow][usingCol].setMinion(minion,currentPlayer.getPlayerNumber());
                         currentPlayer.useBudget(config.getSpawnCost());
+                        for (Hex hex : currPlayerHex) System.out.println(hex);
                     }
                 }
 
@@ -166,11 +173,10 @@ public class GameState {
                     if(gameBoard[usingRow][usingCol].getOwnerName()!=currentPlayer.getPlayerNumber() || gameBoard[usingRow2][usingCol2].getOwnerName()!=currentPlayer.getPlayerNumber()) System.out.println("Can't move minion");
                     else if(gameBoard[usingRow][usingCol].hasMinion()) System.out.println("Already have minion in target hex");
                     else if(!gameBoard[usingRow2][usingCol2].hasMinion()) System.out.println("Don't have minion to move");
-                    else if(!NearbySet.contains(new Hex(usingRow,usingCol))) System.out.println("\nThis hex is too far\n");
+                    else if(!currPlayerHex.contains(new Hex(usingRow,usingCol))) System.out.println("\nThis hex is too far\n");
                     else{
                         gameBoard[usingRow][usingCol].setMinion(gameBoard[usingRow2][usingCol2].getMinion(),currentPlayer.getPlayerNumber());
                         gameBoard[usingRow2][usingCol2].removeMinion();
-
                     }
                 }
                 else if(playerChoice == 6){//attack
