@@ -7,16 +7,18 @@ public class Minion {
     int minionDEF;
     int minionMaxHexMovement;
     int minionNowHexMovement;
-    boolean canMove;
     //int minionAttackRange;
 
     boolean isDead = false;
     //boolean alreadyUseSkill;
 
-    public Minion(int minionMaxHP) {
+    public Minion(int minionMaxHP, int minionATK, int minionDEF,int minionMaxHexMovement) {
         this.minionMaxHP = minionMaxHP;
         this.minionNowHP = minionMaxHP;
-        canMove = true;
+        this.minionATK = minionATK;
+        this.minionDEF = minionDEF;
+        this.minionMaxHexMovement = minionMaxHexMovement;
+        this.minionNowHexMovement = minionMaxHexMovement;
     }
 
     public int minionAttack(){
@@ -24,8 +26,10 @@ public class Minion {
     }
 
     public void minionHasAttacked(int damage){
-        this.minionNowHP -= damage;
-        if(this.minionNowHP <= 0) isDead = true;
+        damage -= getMinionDEF();
+        if(damage<1)    damage = 1;
+        minionNowHP = damage;
+        if(minionNowHP <= 0) isDead = true;
     }
 
     public boolean isDead(){
@@ -39,12 +43,10 @@ public class Minion {
 
     void moveMinion(){
         if(minionNowHexMovement>0) minionNowHexMovement -= 1;
-
-        if(minionNowHexMovement == 0) canMove = false;
     }
 
     boolean canMove(){
-        return canMove;
+        return getMinionNowHexMovement()>0;
     }
 
     int getMinionMaxHP(){

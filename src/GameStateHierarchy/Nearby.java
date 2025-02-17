@@ -1,3 +1,36 @@
+package com.example.demo.src.GameStateHierarchy;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class Nearby {
+
+    // ฟังก์ชันเพื่อหาพิกัดที่ใกล้เคียง
+    public static Set<Hex> getNearby(int row, int col) {
+        Set<Hex> neighbors = new HashSet<>();
+        boolean isEven = (col % 2 == 0);
+
+        addNeighbor(neighbors, row - 1, col); // Top
+        addNeighbor(neighbors, row + 1, col); // Bottom
+        addNeighbor(neighbors, isEven ? row : row - 1, col - 1); // TopLeft or Left
+        addNeighbor(neighbors, isEven ? row + 1 : row, col - 1); // BottomLeft or Left
+        addNeighbor(neighbors, isEven ? row : row - 1, col + 1); // TopRight or Right
+        addNeighbor(neighbors, isEven ? row + 1 : row, col + 1); // BottomRight or Right
+
+        return neighbors;
+    }
+
+    // ฟังก์ชันเพิ่มพิกัดที่ใกล้เคียง
+    private static void addNeighbor(Set<Hex> neighbors, int row, int col) {
+        if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+            neighbors.add(new Hex(row, col));
+        }
+    }
+}
+
+
+
+/*
 public  class Nearby {
 
     public static int[][] Nearby(int row, int col) {
@@ -56,3 +89,4 @@ public  class Nearby {
 
     }
 }
+*/

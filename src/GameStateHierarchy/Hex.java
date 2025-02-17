@@ -1,5 +1,7 @@
 package com.example.demo.src.GameStateHierarchy;
+
 import com.example.demo.src.MinionAndStrategyHierarchy.*;
+import java.util.Objects;
 
 public class Hex {
     //Player owner;
@@ -13,10 +15,6 @@ public class Hex {
         this.col = col;
         this.ownerName = "";
         this.minion = null;
-    }
-
-    public void NearbyHex(){
-
     }
 
     void setMinion(Minion minion,String ownerName){
@@ -37,7 +35,7 @@ public class Hex {
     }
 
     public boolean isOwned(){
-        return ownerName != "" ;
+        return ownerName.isEmpty();
     }
 
     public boolean hasMinion(){
@@ -45,7 +43,7 @@ public class Hex {
     }
 
     public void attackMinionInHex(int Damage){
-        minion.minionHasAttacked(Damage);
+        if (minion != null) minion.minionHasAttacked(Damage);
     }
 
     public boolean isMinionDead(){
@@ -68,4 +66,22 @@ public class Hex {
         return col;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Hex hex = (Hex) o;
+        return row == hex.row && col == hex.col;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(row, col);
+    }
+
+    // วิธีการแสดงผล
+    @Override
+    public String toString() {
+        return "Hex[" + row + "," + col + "]";
+    }
 }
