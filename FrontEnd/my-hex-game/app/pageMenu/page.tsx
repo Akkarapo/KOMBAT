@@ -53,7 +53,7 @@ export default function GameMenu() {
       <img src="/Logo.png" alt="KOMBAT Logo" className="absolute top-8 left-10 w-[1000px] h-auto" />
 
       <div className="absolute top-[35%] left-10 flex flex-col space-y-6">
-        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-duel")}>
+        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/match-players")}>
           <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Duel</span>
         </button>
         <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-solitaire")}>
