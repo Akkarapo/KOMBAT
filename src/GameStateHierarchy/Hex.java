@@ -35,7 +35,7 @@ public class Hex {
     }
 
     public boolean isOwned(){
-        return ownerName.isEmpty();
+        return !(ownerName=="");
     }
 
     public boolean hasMinion(){

@@ -50,6 +50,10 @@ public class Player {
         return (long) budget;
     }
 
+    public void getMoreBudget(long budget){
+        this.budget += budget;
+    }
+
     public String getPlayerNumber() {
         return PlayerNumber;
     }

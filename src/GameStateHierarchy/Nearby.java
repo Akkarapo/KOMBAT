@@ -26,6 +26,30 @@ public class Nearby {
             neighbors.add(new Hex(row, col));
         }
     }
+    public static void main(String[] args) {
+        Set<Hex> initialPositions = new HashSet<>();
+        initialPositions.add(new Hex(7, 7));
+        initialPositions.add(new Hex(7, 6));
+        initialPositions.add(new Hex(7, 5));
+        initialPositions.add(new Hex(6, 7));
+        initialPositions.add(new Hex(6, 6));
+
+        Set<Hex> NearbySet = new HashSet<>();
+
+        for (Hex hex : initialPositions) {
+            Set<Hex> neighbors = getNearby(hex.row, hex.col);
+
+            for (Hex neighbor : neighbors) {
+                if (!initialPositions.contains(neighbor)) {
+                    NearbySet.add(neighbor);
+                }
+            }
+        }
+
+        for (Hex hex : NearbySet) {
+            System.out.println(hex);
+        }
+    }
 }
 
 

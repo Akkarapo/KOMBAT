@@ -6,6 +6,7 @@ import com.example.demo.src.MinionAndStrategyHierarchy.*;
 import java.util.Scanner;
 import java.util.HashSet;
 import java.util.Set;
+import static java.lang.Math.*;
 
 public class GameState {
 
@@ -20,7 +21,7 @@ public class GameState {
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                gameBoard[i][j] = new Hex(i+1,j+1);
+                gameBoard[i][j] = new Hex(i,j);
             }
 
         }
@@ -44,7 +45,13 @@ public class GameState {
     }
 
     void GameStart(){
-        while(nowTurn<config.getMaxTurns()){
+        while(nowTurn<=config.getMaxTurns()){
+
+            if(nowTurn>1){
+                player1.getMoreBudget(GetMoreMoney(config.getInterestPct(),player1.getBudget(),nowTurn,config.getTurnBudget()));
+                player2.getMoreBudget(GetMoreMoney(config.getInterestPct(),player2.getBudget(),nowTurn,config.getTurnBudget()));
+            }
+
             Player  currentPlayer = !(nowTurn % 2 == 0) ? player1 : player2;
             boolean playing = true;
 
@@ -58,6 +65,8 @@ public class GameState {
                 }
             }
 
+            Set<Hex> NearbySet = calculateNearbyHexes(currPlayerHex);
+
             System.out.println("\n________________________________");
             System.out.println("Turn "+nowTurn);
             System.out.println("________________________________\n");
@@ -70,7 +79,8 @@ public class GameState {
                 System.out.println("4.Spawn Minion");
                 System.out.println("5.Move Minion");
                 System.out.println("6.Attack");
-                System.out.println("7.Exit");
+                System.out.println("7.Show budget");
+                System.out.println("8.End Turn");
                 System.out.println("Your Choice:\n");
 
                 Scanner Choice = new Scanner(System.in);
@@ -83,21 +93,12 @@ public class GameState {
 
                 //check owned hex
                 if(playerChoice == 1){
-                    for (Hex hex : currPlayerHex) {
-                        System.out.println(hex);
-                    }
+                    for (Hex hex : currPlayerHex) System.out.println(hex);
                 }
 
                 //Nearby
                 else if(playerChoice == 2){
-                    System.out.println("Please enter hex row:");
-                    Scanner uRow = new Scanner(System.in);
-                    usingRow = uRow.nextInt();
-                    System.out.println("Please enter hex col:");
-                    Scanner uCol = new Scanner(System.in);
-                    usingCol = uCol.nextInt();
-
-
+                    for (Hex hex : NearbySet) System.out.println(hex); // จะใช้ toString() ที่กำหนดไว้ใน Hex
                 }
 
                 //Buy hex
@@ -113,10 +114,15 @@ public class GameState {
 
                     if(gameBoard[usingRow][usingCol].isOwned()) System.out.println("\nHex already has owner\n");
                     else if(currentPlayer.getBudget()< config.getHexPurchaseCost()) System.out.println("\nNot enough budget\n");
-                    //else if() System.out.println("\nThis hex is too far\n");
+                    else if(!NearbySet.contains(new Hex(usingRow,usingCol))) System.out.println("\nThis hex is too far\n");
                     else{
                         gameBoard[usingRow][usingCol].setOwnerName(currentPlayer.getPlayerNumber());
                         currentPlayer.useBudget(config.getHexPurchaseCost());
+                        currPlayerHex.add(new Hex(usingRow,usingCol));
+                        NearbySet = calculateNearbyHexes(currPlayerHex);
+
+                        System.out.println("Now owned hex");
+                        for (Hex hex : currPlayerHex) System.out.println(hex);
                     }
                 }
 
@@ -160,7 +166,7 @@ public class GameState {
                     if(gameBoard[usingRow][usingCol].getOwnerName()!=currentPlayer.getPlayerNumber() || gameBoard[usingRow2][usingCol2].getOwnerName()!=currentPlayer.getPlayerNumber()) System.out.println("Can't move minion");
                     else if(gameBoard[usingRow][usingCol].hasMinion()) System.out.println("Already have minion in target hex");
                     else if(!gameBoard[usingRow2][usingCol2].hasMinion()) System.out.println("Don't have minion to move");
-                    //else if() System.out.println("\nThis hex is too far\n");
+                    else if(!NearbySet.contains(new Hex(usingRow,usingCol))) System.out.println("\nThis hex is too far\n");
                     else{
                         gameBoard[usingRow][usingCol].setMinion(gameBoard[usingRow2][usingCol2].getMinion(),currentPlayer.getPlayerNumber());
                         gameBoard[usingRow2][usingCol2].removeMinion();
@@ -190,20 +196,48 @@ public class GameState {
                         gameBoard[usingRow][usingCol].attackMinionInHex(gameBoard[usingRow2][usingCol2].getMinionAttack());
 
                         if(gameBoard[usingRow][usingCol].isMinionDead()) gameBoard[usingRow][usingCol].removeMinion();
-                        }
                     }
-
+                }
                 else if(playerChoice == 7){
+                    System.out.println("Your budget: "+currentPlayer.getBudget());
+                }
+                else if(playerChoice == 8){
 
                     if(nowTurn % 2 == 0) player2 = currentPlayer;
                     else player1 = currentPlayer;
 
                     playing = false;
                 }
+                else{
+                    System.out.println("Invalid choice");
+                }
             }
 
             nowTurn++;
             System.out.println("\n________________________________\n");
         }
+
+
     }
+
+    private static Set<Hex> calculateNearbyHexes(Set<Hex> currPlayerHex) {
+        Set<Hex> nearbySet = new HashSet<>();
+
+        for (Hex hex : currPlayerHex) {
+            Set<Hex> neighbors = Nearby.getNearby(hex.getRow(), hex.getCol());
+
+            // เพิ่มพิกัดใกล้เคียงที่ไม่มีใน currPlayerHex
+            for (Hex neighbor : neighbors) {
+                if (!currPlayerHex.contains(neighbor)) {
+                    nearbySet.add(neighbor);
+                }
+            }
+        }
+        return nearbySet;
+    }
+
+    private static long GetMoreMoney(int Interest,long playerBudget,int nowTurn,int TurnBudget){
+        return (long) (((double) Interest /100*log10(playerBudget)*nowTurn)+TurnBudget);
+    }
+
 }
