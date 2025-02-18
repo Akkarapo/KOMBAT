@@ -70,7 +70,7 @@ export default function HowToAutoPage() {
             {/* Close Button */}
             <motion.button
               className="hover:opacity-80"
-              onClick={() => router.push("/game")}
+              onClick={() => router.push("/choose-minions")}
               style={{ marginRight: "30px" }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
