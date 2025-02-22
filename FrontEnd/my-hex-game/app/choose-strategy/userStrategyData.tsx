@@ -1,4 +1,3 @@
-// userStrategyData.tsx
 "use client";
 import { createContext, useContext, useState, ReactNode } from "react";
 
@@ -11,16 +10,18 @@ interface MinionData {
 
 interface UserStrategyContextType {
   minions: MinionData[];
+  lastSelectedMinionId: number | null;
   setMinionData: (minionId: number, name: string, defense: string) => void;
   setStrategy: (minionId: number, strategy: string) => void;
   getMinionData: (minionId: number) => MinionData | undefined;
-  resetMinions: () => void; // ✅ ฟังก์ชันรีเซ็ตข้อมูล
+  setLastSelectedMinion: (minionId: number) => void;
 }
 
 const UserStrategyContext = createContext<UserStrategyContextType | undefined>(undefined);
 
 export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
   const [minions, setMinions] = useState<MinionData[]>([]);
+  const [lastSelectedMinionId, setLastSelectedMinionId] = useState<number | null>(null);
 
   const setMinionData = (minionId: number, name: string, defense: string) => {
     setMinions((prev) =>
@@ -31,20 +32,31 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setStrategy = (minionId: number, strategy: string) => {
-    setMinions((prev) => prev.map((m) => (m.minionId === minionId ? { ...m, strategy } : m)));
+    setMinions((prev) =>
+      prev.map((m) => (m.minionId === minionId ? { ...m, strategy } : m))
+    );
+    setLastSelectedMinionId(minionId);
   };
 
   const getMinionData = (minionId: number) => {
     return minions.find((m) => m.minionId === minionId);
   };
 
-  // ✅ ฟังก์ชันรีเซ็ตข้อมูลทั้งหมด
-  const resetMinions = () => {
-    setMinions([]);
+  const setLastSelectedMinion = (minionId: number) => {
+    setLastSelectedMinionId(minionId);
   };
 
   return (
-    <UserStrategyContext.Provider value={{ minions, setMinionData, setStrategy, getMinionData, resetMinions }}>
+    <UserStrategyContext.Provider
+      value={{
+        minions,
+        lastSelectedMinionId,
+        setMinionData,
+        setStrategy,
+        getMinionData,
+        setLastSelectedMinion
+      }}
+    >
       {children}
     </UserStrategyContext.Provider>
   );

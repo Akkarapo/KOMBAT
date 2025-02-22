@@ -14,14 +14,12 @@ const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const count = parseInt(searchParams.get("count") || "0", 10);
-  const { minions, setMinionData, getMinionData, resetMinions } = useUserStrategy();
+  const { minions, setMinionData, getMinionData, setStrategy, lastSelectedMinionId, setLastSelectedMinion } = useUserStrategy();
 
-  const [selected, setSelected] = useState<number | null>(0);
-  const [minionData, setMinionDataState] = useState<{ name: string; defense: string; strategy: string }[]>(
-    Array.from({ length: count }, () => ({ name: "", defense: "", strategy: "" }))
-  );
+  const [selected, setSelected] = useState<number | null>(lastSelectedMinionId ? lastSelectedMinionId - 1 : 0);
 
-  // ✅ โหลดข้อมูลมินเนี่ยนที่เลือก
+  const [minionData, setMinionDataState] = useState<{ name: string; defense: string; strategy: string }[]>(Array.from({ length: count }, () => ({ name: "", defense: "", strategy: "" })));
+
   useEffect(() => {
     setMinionDataState(
       Array.from({ length: count }, (_, i) => {
@@ -31,22 +29,19 @@ const ChooseMinionType: React.FC = () => {
           : { name: "", defense: "", strategy: "" };
       })
     );
-  }, [count, minions]);
 
-  // ✅ ตรวจสอบว่า `selected` มีค่าหรือไม่ ถ้าไม่มีให้ตั้งค่าเริ่มต้น
-  useEffect(() => {
-    if (selected === null && count > 0) {
-      setSelected(0);
+    if (lastSelectedMinionId) {
+      setSelected(lastSelectedMinionId - 1);
     }
-  }, [selected, count]);
+  }, [count, minions, lastSelectedMinionId]);
 
   const handleSelect = (index: number) => {
     setSelected(index);
+    setLastSelectedMinion(index + 1);
   };
 
   const handleBack = () => {
-    resetMinions();
-    router.push("/choose-minions");
+    router.push(`/choose-minions?count=${count}`);
   };
 
   const handleConfirm = () => {
@@ -55,6 +50,11 @@ const ChooseMinionType: React.FC = () => {
 
   const handleChooseStrategy = () => {
     if (selected !== null) {
+      // ✅ สร้าง Minion ถ้ายังไม่มีข้อมูลมาก่อน เพื่อให้สามารถเลือก Strategy ได้
+      if (!getMinionData(selected + 1)) {
+        setMinionData(selected + 1, "", ""); 
+      }
+      setLastSelectedMinion(selected + 1);
       router.push(`/choose-strategy?minionId=${selected + 1}&count=${count}`);
     }
   };
@@ -70,13 +70,12 @@ const ChooseMinionType: React.FC = () => {
   };
 
   return (
-    <div
-      className="relative h-screen w-screen bg-cover bg-center bg-no-repeat flex items-center justify-end pr-28"
+    <div className="relative h-screen w-screen bg-cover bg-center bg-no-repeat flex items-center justify-end pr-28"
       style={{ backgroundImage: "url('/backgroundHowTo.png')" }}
     >
       <h1 className="text-white text-6xl font-bold absolute top-16 left-16">Setting minion</h1>
-      <div
-        className="absolute bottom-[260px] left-[780px] flex items-center"
+
+      <div className="absolute bottom-[260px] left-[780px] flex items-center"
         style={{ gap: count === 5 ? "10px" : "20px" }}
       >
         {Array.from({ length: count }, (_, i) => (
@@ -93,9 +92,9 @@ const ChooseMinionType: React.FC = () => {
           </motion.div>
         ))}
       </div>
-      
-      {/* ✅ เพิ่ม Model ของมินเนี่ยนที่ด้านซ้าย */}
-      {selected !== null && minionData[selected] && (
+
+      {/* ✅ แสดง Model มินเนี่ยนทางซ้าย */}
+      {selected !== null && (
         <motion.div 
           key={selected}
           className="absolute left-[100px] bottom-[100px] flex flex-col items-start"
