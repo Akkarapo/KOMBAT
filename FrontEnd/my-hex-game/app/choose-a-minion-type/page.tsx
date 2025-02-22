@@ -14,10 +14,9 @@ const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const count = parseInt(searchParams.get("count") || "0", 10);
-  const { minions, setMinionData, getMinionData, setStrategy, lastSelectedMinionId, setLastSelectedMinion } = useUserStrategy();
+  const { minions, setMinionData, getMinionData, lastSelectedMinionId, setLastSelectedMinion } = useUserStrategy();
 
   const [selected, setSelected] = useState<number | null>(lastSelectedMinionId ? lastSelectedMinionId - 1 : 0);
-
   const [minionData, setMinionDataState] = useState<{ name: string; defense: string; strategy: string }[]>(Array.from({ length: count }, () => ({ name: "", defense: "", strategy: "" })));
 
   useEffect(() => {
@@ -30,7 +29,7 @@ const ChooseMinionType: React.FC = () => {
       })
     );
 
-    if (lastSelectedMinionId) {
+    if (lastSelectedMinionId !== null && selected === null) {
       setSelected(lastSelectedMinionId - 1);
     }
   }, [count, minions, lastSelectedMinionId]);
@@ -40,37 +39,44 @@ const ChooseMinionType: React.FC = () => {
     setLastSelectedMinion(index + 1);
   };
 
-  const handleBack = () => {
-    router.push(`/choose-minions?count=${count}`);
-  };
-
   const handleConfirm = () => {
+    const incompleteIndex = minionData.findIndex(
+      (minion) => !minion.name || !minion.defense || !minion.strategy
+    );
+
+    if (incompleteIndex !== -1) {
+      if (selected !== incompleteIndex) {
+        setSelected(incompleteIndex);
+        setLastSelectedMinion(incompleteIndex + 1);
+      }
+      return;
+    }
+
     router.push("/game");
   };
 
   const handleGoToMenu = () => {
-    // ✅ รีเซ็ตค่าทุกอย่างเฉพาะเมื่อไปที่หน้า pageMenu
     router.push("/pageMenu");
   };
 
   const handleChooseStrategy = () => {
     if (selected !== null) {
-      // ✅ สร้าง Minion ถ้ายังไม่มีข้อมูลมาก่อน เพื่อให้สามารถเลือก Strategy ได้
-      if (!getMinionData(selected + 1)) {
-        setMinionData(selected + 1, "", ""); 
-      }
       setLastSelectedMinion(selected + 1);
       router.push(`/choose-strategy?minionId=${selected + 1}&count=${count}`);
     }
   };
 
   const handleNameChange = (index: number, value: string) => {
-    setMinionDataState((prev) => prev.map((item, i) => (i === index ? { ...item, name: value } : item)));
+    setMinionDataState((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, name: value } : item))
+    );
     setMinionData(index + 1, value, minionData[index].defense);
   };
 
   const handleDefenseChange = (index: number, value: string) => {
-    setMinionDataState((prev) => prev.map((item, i) => (i === index ? { ...item, defense: value } : item)));
+    setMinionDataState((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, defense: value } : item))
+    );
     setMinionData(index + 1, minionData[index].name, value);
   };
 
@@ -98,7 +104,6 @@ const ChooseMinionType: React.FC = () => {
         ))}
       </div>
 
-      {/* ✅ แสดง Model มินเนี่ยนทางซ้าย */}
       {selected !== null && (
         <motion.div 
           key={selected}

@@ -13,9 +13,9 @@ interface UserStrategyContextType {
   lastSelectedMinionId: number | null;
   setMinionData: (minionId: number, name: string, defense: string) => void;
   setStrategy: (minionId: number, strategy: string) => void;
-  getMinionData: (minionId: number) => MinionData | undefined;
+  getMinionData: (minionId: number) => MinionData;
   setLastSelectedMinion: (minionId: number) => void;
-  resetAllData: () => void; // ✅ รีเซ็ตทุกอย่างเมื่อกลับไปที่ /pageMenu เท่านั้น
+  resetAllData: () => void;
 }
 
 const UserStrategyContext = createContext<UserStrategyContextType | undefined>(undefined);
@@ -25,11 +25,14 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
   const [lastSelectedMinionId, setLastSelectedMinionId] = useState<number | null>(null);
 
   const setMinionData = (minionId: number, name: string, defense: string) => {
-    setMinions((prev) =>
-      prev.some((m) => m.minionId === minionId)
-        ? prev.map((m) => (m.minionId === minionId ? { ...m, name, defense } : m))
-        : [...prev, { minionId, name, defense, strategy: "" }]
-    );
+    setMinions((prev) => {
+      const existingMinion = prev.find((m) => m.minionId === minionId);
+      return existingMinion
+        ? prev.map((m) =>
+            m.minionId === minionId ? { ...m, name, defense } : m
+          )
+        : [...prev, { minionId, name, defense, strategy: "" }];
+    });
   };
 
   const setStrategy = (minionId: number, strategy: string) => {
@@ -39,17 +42,22 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
     setLastSelectedMinionId(minionId);
   };
 
-  const getMinionData = (minionId: number) => {
-    return minions.find((m) => m.minionId === minionId);
+  const getMinionData = (minionId: number): MinionData => {
+    const foundMinion = minions.find((m) => m.minionId === minionId);
+    return (
+      foundMinion || { minionId, name: "", defense: "", strategy: "" }
+    );
   };
 
   const setLastSelectedMinion = (minionId: number) => {
-    setLastSelectedMinionId(minionId);
+    if (minions.some((m) => m.minionId === minionId)) {
+      setLastSelectedMinionId(minionId);
+    }
   };
 
   const resetAllData = () => {
-    setMinions([]); // ✅ รีเซ็ตทุกมินเนี่ยน
-    setLastSelectedMinionId(null); // ✅ รีเซ็ตค่า minion ที่เลือกล่าสุด
+    setMinions([]);
+    setLastSelectedMinionId(null);
   };
 
   return (
@@ -61,7 +69,7 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
         setStrategy,
         getMinionData,
         setLastSelectedMinion,
-        resetAllData, // ✅ ส่งฟังก์ชันไปใช้
+        resetAllData,
       }}
     >
       {children}
