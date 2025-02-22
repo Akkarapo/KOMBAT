@@ -15,6 +15,7 @@ interface UserStrategyContextType {
   setStrategy: (minionId: number, strategy: string) => void;
   getMinionData: (minionId: number) => MinionData | undefined;
   setLastSelectedMinion: (minionId: number) => void;
+  resetAllData: () => void; // ✅ รีเซ็ตทุกอย่างเมื่อกลับไปที่ /pageMenu เท่านั้น
 }
 
 const UserStrategyContext = createContext<UserStrategyContextType | undefined>(undefined);
@@ -46,6 +47,11 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
     setLastSelectedMinionId(minionId);
   };
 
+  const resetAllData = () => {
+    setMinions([]); // ✅ รีเซ็ตทุกมินเนี่ยน
+    setLastSelectedMinionId(null); // ✅ รีเซ็ตค่า minion ที่เลือกล่าสุด
+  };
+
   return (
     <UserStrategyContext.Provider
       value={{
@@ -54,7 +60,8 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
         setMinionData,
         setStrategy,
         getMinionData,
-        setLastSelectedMinion
+        setLastSelectedMinion,
+        resetAllData, // ✅ ส่งฟังก์ชันไปใช้
       }}
     >
       {children}

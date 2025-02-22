@@ -48,6 +48,11 @@ const ChooseMinionType: React.FC = () => {
     router.push("/game");
   };
 
+  const handleGoToMenu = () => {
+    // ✅ รีเซ็ตค่าทุกอย่างเฉพาะเมื่อไปที่หน้า pageMenu
+    router.push("/pageMenu");
+  };
+
   const handleChooseStrategy = () => {
     if (selected !== null) {
       // ✅ สร้าง Minion ถ้ายังไม่มีข้อมูลมาก่อน เพื่อให้สามารถเลือก Strategy ได้
@@ -148,7 +153,7 @@ const ChooseMinionType: React.FC = () => {
         </motion.div>
       )}
 
-      <motion.button onClick={handleBack} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
+      <motion.button onClick={handleGoToMenu} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
       <motion.button onClick={handleConfirm} className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
     </div>
   );
