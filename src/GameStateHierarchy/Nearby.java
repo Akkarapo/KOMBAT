@@ -12,10 +12,10 @@ public class Nearby {
 
         addNeighbor(neighbors, row - 1, col); // Top
         addNeighbor(neighbors, row + 1, col); // Bottom
-        addNeighbor(neighbors, isEven ? row : row - 1, col - 1); // TopLeft or Left
-        addNeighbor(neighbors, isEven ? row + 1 : row, col - 1); // BottomLeft or Left
-        addNeighbor(neighbors, isEven ? row : row - 1, col + 1); // TopRight or Right
-        addNeighbor(neighbors, isEven ? row + 1 : row, col + 1); // BottomRight or Right
+        addNeighbor(neighbors, isEven ? row : row - 1, col - 1); // TopLeft
+        addNeighbor(neighbors, isEven ? row + 1 : row, col - 1); // BottomLeft
+        addNeighbor(neighbors, isEven ? row : row - 1, col + 1); // TopRight
+        addNeighbor(neighbors, isEven ? row + 1 : row, col + 1); // BottomRight
 
         return neighbors;
     }
@@ -26,6 +26,8 @@ public class Nearby {
             neighbors.add(new Hex(row, col));
         }
     }
+
+
     public static void main(String[] args) {
         Set<Hex> initialPositions = new HashSet<>();
         initialPositions.add(new Hex(7, 7));

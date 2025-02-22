@@ -1,6 +1,7 @@
 package com.example.demo.src.MinionAndStrategyHierarchy;
 
 public class Minion {
+    String ownerName;
     int minionMaxHP;
     int minionNowHP;
     int minionATK;
@@ -12,13 +13,16 @@ public class Minion {
     boolean isDead = false;
     //boolean alreadyUseSkill;
 
-    public Minion(int minionMaxHP, int minionATK, int minionDEF,int minionMaxHexMovement) {
+    public Minion(String ownerName,int minionMaxHP, int minionATK, int minionDEF,int minionMaxHexMovement) {
+        this.ownerName = ownerName;
+
         this.minionMaxHP = minionMaxHP;
         this.minionNowHP = minionMaxHP;
         this.minionATK = minionATK;
         this.minionDEF = minionDEF;
         this.minionMaxHexMovement = minionMaxHexMovement;
         this.minionNowHexMovement = minionMaxHexMovement;
+
     }
 
     public int minionAttack(){
@@ -41,19 +45,22 @@ public class Minion {
         this.minionNowHexMovement = this.minionMaxHexMovement;
     }
 
-    void moveMinion(){
+    public void moveMinion(){
         if(minionNowHexMovement>0) minionNowHexMovement -= 1;
     }
 
-    boolean canMove(){
+    public boolean canMove(){
         return getMinionNowHexMovement()>0;
+    }
+    public String getOwnerName() {
+        return ownerName;
     }
 
     int getMinionMaxHP(){
         return minionMaxHP;
     }
 
-    int getMinionNowHP(){
+    public int getMinionNowHP(){
         return minionNowHP;
     }
 
@@ -68,7 +75,5 @@ public class Minion {
     int getMinionNowHexMovement(){
         return minionNowHexMovement;
     }
-
-
 
 }

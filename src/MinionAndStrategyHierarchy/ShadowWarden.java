@@ -2,8 +2,8 @@ package com.example.demo.src.MinionAndStrategyHierarchy;
 
 public class ShadowWarden extends Minion {
 
-    public ShadowWarden(int minionMaxHP) {
-        super(minionMaxHP,minionMaxHP/5,minionMaxHP/10,2);
+    public ShadowWarden(String PlayerName,int minionMaxHP) {
+        super(PlayerName,minionMaxHP,30,10,2);
     }
 
     @Override

@@ -17,10 +17,8 @@ public class Hex {
         this.minion = null;
     }
 
-    void setMinion(Minion minion,String ownerName){
-        if(getOwnerName() == ownerName){
+    void setMinion(Minion minion){
             this.minion = minion;
-        }
     }
 
     public void removeMinion(){
@@ -53,6 +51,9 @@ public class Hex {
     public int getMinionAttack(){
         return minion.minionAttack();
     }
+    public boolean canMoveMinion(){
+        return minion.canMove();
+    }
 
     public Minion getMinion() {
         return minion;
@@ -64,6 +65,10 @@ public class Hex {
 
     public int getCol() {
         return col;
+    }
+
+    public void moveMinion() {
+        minion.moveMinion();
     }
 
     @Override
