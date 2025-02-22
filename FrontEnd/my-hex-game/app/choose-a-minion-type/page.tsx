@@ -61,10 +61,14 @@ const ChooseMinionType: React.FC = () => {
 
   const handleChooseStrategy = () => {
     if (selected !== null) {
+      // ✅ ถ้า Minion ยังไม่มีข้อมูลเลย ให้สร้างข้อมูลเริ่มต้นก่อนเลือก Strategy
+      if (!getMinionData(selected + 1)) {
+        setMinionData(selected + 1, "", "");
+      }
       setLastSelectedMinion(selected + 1);
       router.push(`/choose-strategy?minionId=${selected + 1}&count=${count}`);
     }
-  };
+  };  
 
   const handleNameChange = (index: number, value: string) => {
     setMinionDataState((prev) =>

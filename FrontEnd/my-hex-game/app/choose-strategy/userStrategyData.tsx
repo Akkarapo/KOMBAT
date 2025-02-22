@@ -36,11 +36,14 @@ export const UserStrategyProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setStrategy = (minionId: number, strategy: string) => {
-    setMinions((prev) =>
-      prev.map((m) => (m.minionId === minionId ? { ...m, strategy } : m))
-    );
+    setMinions((prev) => {
+      const existingMinion = prev.find((m) => m.minionId === minionId);
+      return existingMinion
+        ? prev.map((m) => (m.minionId === minionId ? { ...m, strategy } : m))
+        : [...prev, { minionId, name: "", defense: "", strategy }];
+    });
     setLastSelectedMinionId(minionId);
-  };
+  };  
 
   const getMinionData = (minionId: number): MinionData => {
     const foundMinion = minions.find((m) => m.minionId === minionId);
