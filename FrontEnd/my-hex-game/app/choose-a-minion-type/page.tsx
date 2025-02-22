@@ -1,22 +1,51 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUserStrategy } from "../choose-strategy/userStrategyData";
+
+const strategyIcons: Record<string, string> = {
+  "Strategy 1": "/Strategy1Icon.png",
+  "Strategy 2": "/Strategy2Icon.png",
+  "Strategy 3": "/Strategy3Icon.png",
+};
 
 const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const count = parseInt(searchParams.get("count") || "0", 10);
+  const { minions, setMinionData, getMinionData, resetMinions } = useUserStrategy();
+
   const [selected, setSelected] = useState<number | null>(0);
-  const [minionData, setMinionData] = useState<{ name: string; defense: string }[]>(
-    Array.from({ length: count }, () => ({ name: "", defense: "" }))
+  const [minionData, setMinionDataState] = useState<{ name: string; defense: string; strategy: string }[]>(
+    Array.from({ length: count }, () => ({ name: "", defense: "", strategy: "" }))
   );
+
+  // ✅ โหลดข้อมูลมินเนี่ยนที่เลือก
+  useEffect(() => {
+    setMinionDataState(
+      Array.from({ length: count }, (_, i) => {
+        const savedMinion = getMinionData(i + 1);
+        return savedMinion
+          ? { name: savedMinion.name, defense: savedMinion.defense, strategy: savedMinion.strategy }
+          : { name: "", defense: "", strategy: "" };
+      })
+    );
+  }, [count, minions]);
+
+  // ✅ ตรวจสอบว่า `selected` มีค่าหรือไม่ ถ้าไม่มีให้ตั้งค่าเริ่มต้น
+  useEffect(() => {
+    if (selected === null && count > 0) {
+      setSelected(0);
+    }
+  }, [selected, count]);
 
   const handleSelect = (index: number) => {
     setSelected(index);
   };
 
   const handleBack = () => {
+    resetMinions();
     router.push("/choose-minions");
   };
 
@@ -25,15 +54,19 @@ const ChooseMinionType: React.FC = () => {
   };
 
   const handleChooseStrategy = () => {
-    router.push("/choose-strategy");
+    if (selected !== null) {
+      router.push(`/choose-strategy?minionId=${selected + 1}&count=${count}`);
+    }
   };
 
   const handleNameChange = (index: number, value: string) => {
-    setMinionData((prev) => prev.map((item, i) => (i === index ? { ...item, name: value } : item)));
+    setMinionDataState((prev) => prev.map((item, i) => (i === index ? { ...item, name: value } : item)));
+    setMinionData(index + 1, value, minionData[index].defense);
   };
 
   const handleDefenseChange = (index: number, value: string) => {
-    setMinionData((prev) => prev.map((item, i) => (i === index ? { ...item, defense: value } : item)));
+    setMinionDataState((prev) => prev.map((item, i) => (i === index ? { ...item, defense: value } : item)));
+    setMinionData(index + 1, minionData[index].name, value);
   };
 
   return (
@@ -60,7 +93,9 @@ const ChooseMinionType: React.FC = () => {
           </motion.div>
         ))}
       </div>
-      {selected !== null && (
+      
+      {/* ✅ เพิ่ม Model ของมินเนี่ยนที่ด้านซ้าย */}
+      {selected !== null && minionData[selected] && (
         <motion.div 
           key={selected}
           className="absolute left-[100px] bottom-[100px] flex flex-col items-start"
@@ -72,70 +107,52 @@ const ChooseMinionType: React.FC = () => {
             src={`/Model0${selected + 1}.png`}
             alt={`Model ${selected + 1}`}
             animate={{ rotateY: 180 }}
-            className={`object-contain ${
-              selected === 0
-                ? "w-[400px] h-[400px]"
-                : selected === 1
-                ? "w-[500px] h-[500px]"
-                : selected === 2
-                ? "w-[550px] h-[550px]"
-                : selected === 3
-                ? "w-[550px] h-[550px]"
-                : "w-[550px] h-[550px]"
-            }`}
+            className="object-contain w-[400px] h-[400px]"
           />
         </motion.div>
       )}
+
       {selected !== null && (
         <motion.div className="absolute left-[800px] bottom-[120px] flex flex-col items-start">
-        <motion.img src="/FieldsNamesProtection.png" alt="Minion Fields" className="w-[500px]" />
-        <div className="absolute top-[60px] left-[50px] w-[300px]">
-          <input
-            type="text"
-            value={minionData[selected].name}
-            onChange={(e) => handleNameChange(selected, e.target.value)}
-            className="bg-transparent p-2 rounded w-full text-white border border-gray-500 placeholder-white"
-            placeholder="Set name the minion"
-            style={{ position: "absolute", top: "-52px", left: "20px", width: "415px" }}
+          <motion.img src="/FieldsNamesProtection.png" alt="Minion Fields" className="w-[500px]" />
+          <div className="absolute top-[60px] left-[50px] w-[300px]">
+            <input
+              type="text"
+              value={minionData[selected]?.name || ""}
+              onChange={(e) => handleNameChange(selected, e.target.value)}
+              className="bg-transparent p-2 rounded w-full text-white border border-gray-500 placeholder-white"
+              placeholder="Set name the minion"
+              style={{ position: "absolute", top: "-52px", left: "20px", width: "415px" }}
+            />
+            <input
+              type="number"
+              value={minionData[selected]?.defense || ""}
+              onChange={(e) => handleDefenseChange(selected, e.target.value)}
+              className="bg-transparent p-2 rounded w-full text-black border border-gray-500 placeholder-gray-500 mt-2"
+              placeholder="Set this minion's defense."
+              style={{ position: "absolute", top: "2px", left: "20px", width: "415px" }}
+            />
+          </div>
+          <motion.button
+            onClick={handleChooseStrategy}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
+            className="absolute top-[0px] left-[520px] w-[120px] h-[120px] bg-contain bg-no-repeat"
+            style={{
+              backgroundImage: `url('${
+                minionData[selected]?.strategy ? strategyIcons[minionData[selected]?.strategy] : "/ChooseAstrategy.png"
+              }')`,
+              zIndex: 50,
+            }}
           />
-          <input
-            type="number"
-            value={minionData[selected].defense}
-            onChange={(e) => handleDefenseChange(selected, e.target.value)}
-            className="bg-transparent p-2 rounded w-full text-black border border-gray-500 placeholder-gray-500 mt-2"
-            placeholder="Set this minion's defense."
-            style={{ position: "absolute", top: "2px", left: "20px", width: "415px" }}
-          />
-        </div>
-        <motion.button
-          onClick={handleChooseStrategy}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
-          className="absolute top-[0px] left-[520px] w-[120px] h-[120px] bg-contain bg-no-repeat"
-          style={{ backgroundImage: "url('/ChooseAstrategy.png')", zIndex: 50 }}
-        />
-      </motion.div>
+        </motion.div>
       )}
-      <motion.button
-        onClick={handleBack}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
-        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
-        style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
-      />
-      <motion.button
-        onClick={handleConfirm}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
-        className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
-        style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }}
-      />
+
+      <motion.button onClick={handleBack} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
+      <motion.button onClick={handleConfirm} className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
     </div>
   );
 };
-
 
 export default ChooseMinionType;

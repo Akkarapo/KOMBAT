@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "../../components/ui/card";
 import { Textarea } from "../../components/ui/textarea";
 import { strategyData } from "./strategyData";
-import { motion } from "framer-motion"; // ✅ ใช้ Framer Motion
+import { motion } from "framer-motion";
+import { useUserStrategy } from "./userStrategyData";
 
 // ไอคอน Strategy
 const strategyIcons: Record<string, string> = {
@@ -33,18 +34,25 @@ const panelVariants = {
 
 export default function ChooseStrategy() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const count = searchParams.get("count") || "1"; // ✅ ดึงค่า count จาก URL
+  const minionId = searchParams.get("minionId") || "1"; // ✅ ดึงค่า minionId จาก URL
+  const { setStrategy } = useUserStrategy(); // ✅ ใช้ context เพื่อเก็บค่า strategy
   const [selectedStrategy, setSelectedStrategy] = useState<keyof typeof strategyData>("Strategy 1");
   const [customStrategy, setCustomStrategy] = useState<string>(strategyData["Strategy 1"]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
+  // ✅ บันทึก Strategy ที่เลือกลง context และกลับไป choose-a-minion-type
   const handleConfirm = () => {
     console.log("Selected strategy:", selectedStrategy);
-    router.push("/next-page");
+    setStrategy(parseInt(minionId, 10), selectedStrategy); // ✅ บันทึก strategy สำหรับ Minion ที่เลือก
+    router.push(`/choose-a-minion-type?count=${count}`); // ✅ กลับไปหน้ากำหนดค่า Minion
   };
 
+  // ✅ ปุ่ม Back กลับไปยังหน้าก่อนหน้า
   const handleBack = () => {
     console.log("Back button clicked");
-    router.push("/previous-page");
+    router.push(`/choose-a-minion-type?count=${count}`);
   };
 
   return (
