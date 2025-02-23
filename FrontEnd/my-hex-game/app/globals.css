@@ -23,10 +23,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url("/background.png");
+  background-image: url("/backgroundHowTo.png");
   background-size: cover;
   background-position: center;
   overflow: hidden;
+}
+
+/* ป้องกันการเลื่อนหน้าจอ */
+* {
+  box-sizing: border-box;
 }
 
 /* คอนเทนเนอร์หลักสำหรับ HexGrid */
@@ -39,11 +44,7 @@ body {
   height: 100%;
 }
 
-/* ป้องกันการเลื่อนหน้าจอ */
-* {
-  box-sizing: border-box;
-}
-
+/* UI ของผู้เล่น */
 .player-ui {
   position: absolute;
   padding: 20px 60px; /* ลดขนาด padding */
@@ -64,7 +65,20 @@ body {
   right: 10px;
 }
 
+/* ทำให้ polygon คลิกได้ */
 polygon {
-  cursor: pointer; /* เปลี่ยนเป็น pointer เพื่อแสดงว่าคลิกได้ */
-  pointer-events: all; /* ให้ polygon ตอบสนองต่อการคลิก */
+  cursor: pointer;
+  pointer-events: all;
+}
+
+/* 🔹 ปิด Spinner ใน <input type="number"> ทุกเบราว์เซอร์ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: none;
 }

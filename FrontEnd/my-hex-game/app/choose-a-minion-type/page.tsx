@@ -52,7 +52,7 @@ const ChooseMinionType: React.FC = () => {
       return;
     }
 
-    router.push("/game");
+    router.push("/configurationPage");
   };
 
   const handleGoToMenu = () => {
