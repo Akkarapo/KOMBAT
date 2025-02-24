@@ -47,9 +47,22 @@ const ChooseMinionType: React.FC = () => {
   };
 
   const handleConfirm = () => {
-    localStorage.setItem("minionCount", count.toString()); // ✅ บันทึกค่าก่อนเปลี่ยนหน้า
-    router.push(`/configurationPage?count=${count}`); // ✅ ส่งค่า count ไปด้วย
-  };
+    // หา Minion ตัวแรกที่ยังกรอกข้อมูลไม่ครบ
+    const incompleteIndex = minionData.findIndex(
+      minion => minion.name.trim() === "" || minion.defense.trim() === "" || minion.strategy.trim() === ""
+    );
+  
+    if (incompleteIndex !== -1) {
+      // ถ้ายังมีตัวที่กรอกไม่ครบ ให้เลือกตัวนั้นแทน
+      setSelected(incompleteIndex);
+      setLastSelectedMinion(incompleteIndex + 1);
+      return; // หยุดการทำงาน ไม่ไปหน้าถัดไป
+    }
+  
+    // ถ้ากรอกครบทุกตัวแล้วให้เปลี่ยนหน้า
+    localStorage.setItem("minionCount", count.toString());
+    router.push(`/configurationPage?count=${count}`);
+  };  
 
   const handleGoToMenu = () => {
     router.push("/choose-minions");
