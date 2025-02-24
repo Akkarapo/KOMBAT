@@ -170,8 +170,20 @@ const ChooseMinionType: React.FC = () => {
         </motion.div>
       )}
 
-      <motion.button onClick={handleGoToMenu} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
-      <motion.button onClick={handleConfirm} className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
+      <motion.button onClick={handleGoToMenu} 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
+      <motion.button onClick={handleConfirm} 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
     </div>
   );
 };
