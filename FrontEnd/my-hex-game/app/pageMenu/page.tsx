@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -13,10 +13,18 @@ const characters = [
 
 export default function GameMenu() {
   const router = useRouter();
+  const pathname = usePathname();
   const [currentCharacter, setCurrentCharacter] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [appearFromTop, setAppearFromTop] = useState(false);
   const [topCount, setTopCount] = useState(0);
+
+  // ✅ รีเซ็ตค่า hexConfig ถ้าอยู่ที่หน้า /pageMenu
+  useEffect(() => {
+    if (pathname === "/pageMenu") {
+      localStorage.removeItem("hexConfig");
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,13 +61,22 @@ export default function GameMenu() {
       <img src="/Logo.png" alt="KOMBAT Logo" className="absolute top-8 left-10 w-[1000px] h-auto" />
 
       <div className="absolute top-[35%] left-10 flex flex-col space-y-6">
-        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-duel")}>
+        <button
+          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
+          onClick={() => router.push("/how-to-duel")}
+        >
           <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Duel</span>
         </button>
-        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-solitaire")}>
+        <button
+          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
+          onClick={() => router.push("/how-to-solitaire")}
+        >
           <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Solitaire</span>
         </button>
-        <button className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform" onClick={() => router.push("/how-to-auto")}>
+        <button
+          className="relative w-[300px] h-[80px] bg-[url('/button.png')] bg-no-repeat bg-contain bg-center hover:scale-105 transition-transform"
+          onClick={() => router.push("/how-to-auto")}
+        >
           <span className="absolute inset-0 flex items-center justify-center text-gray-900 text-3xl font-bold">Auto</span>
         </button>
       </div>
@@ -75,7 +92,11 @@ export default function GameMenu() {
             exit={{ y: appearFromTop ? "-110vh" : "110vh" }}
             transition={{ duration: 3.5, ease: "easeInOut" }}
           >
-            <img src={appearFromTop ? characters[currentCharacter].flipped : characters[currentCharacter].normal} alt="Animated Character" className={appearFromTop ? "w-[350px] h-auto" : "w-[450px] h-auto"} />
+            <img
+              src={appearFromTop ? characters[currentCharacter].flipped : characters[currentCharacter].normal}
+              alt="Animated Character"
+              className={appearFromTop ? "w-[350px] h-auto" : "w-[450px] h-auto"}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -12,7 +12,7 @@ const backgroundImage = "/backgroundConfiguration.png";
 const ConfigurationPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const count = searchParams.get("count") || "1"; 
+  const count = searchParams.get("count") || localStorage.getItem("minionCount") || "1"; // ✅ โหลดค่า count
 
   const initialConfig: { [key in keyof typeof HexData]: string } = Object.keys(HexData).reduce(
     (acc, key) => ({ ...acc, [key]: "" }),
@@ -20,20 +20,18 @@ const ConfigurationPage = () => {
   );
 
   const [config, setConfig] = useState(initialConfig);
-  const [missingFields, setMissingFields] = useState<string[]>([]); // ✅ เก็บช่องที่ยังไม่ได้กรอก
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem("hexConfig");
     if (savedConfig) {
       setConfig(JSON.parse(savedConfig));
     }
-  }, []);
+  }, []); // ✅ โหลดค่า config ครั้งเดียว
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setConfig((prev) => ({ ...prev, [name]: value }));
-
-    // ✅ ลบช่องออกจาก missingFields ถ้าผู้ใช้กรอกค่าแล้ว
     setMissingFields((prev) => prev.filter((field) => field !== name));
   };
 
@@ -41,18 +39,19 @@ const ConfigurationPage = () => {
     const emptyFields = Object.keys(config).filter((key) => config[key as keyof typeof config] === "");
 
     if (emptyFields.length > 0) {
-      setMissingFields(emptyFields); // ✅ อัปเดตช่องที่ยังไม่ได้กรอก
-      return; // ❌ หยุดทำงาน ถ้ายังมีช่องว่าง
+      setMissingFields(emptyFields);
+      return;
     }
 
-    // ✅ บันทึกค่าลง localStorage และไปหน้าต่อไป
     localStorage.setItem("hexConfig", JSON.stringify(config));
     console.log("Configuration Saved:", config);
-    router.push("/next-page"); // เปลี่ยนเป็นหน้าที่ต้องการ
+    router.push("/game");
   };
 
   const handleBack = () => {
-    router.push(`/choose-a-minion-type?count=${count}`);
+    localStorage.setItem("hexConfig", JSON.stringify(config)); // ✅ บันทึก config ก่อนออกจากหน้า
+    const savedCount = localStorage.getItem("minionCount") || "1";
+    router.push(`/choose-a-minion-type?count=${savedCount}`);
   };
 
   const keys = Object.keys(HexData);
@@ -132,23 +131,8 @@ const ConfigurationPage = () => {
         ))}
       </div>
 
-      {/* ✅ ปุ่ม Back */}
-      <motion.button
-        onClick={handleBack}
-        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
-        style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      />
-
-      {/* ✅ ปุ่ม Confirm */}
-      <motion.button
-        onClick={handleConfirm}
-        className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
-        style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      />
+      <motion.button onClick={handleBack} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
+      <motion.button onClick={handleConfirm} className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
     </div>
   );
 };

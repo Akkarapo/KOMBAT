@@ -94,7 +94,7 @@ export default function ChooseStrategy() {
               custom={index}
               initial="hidden"
               animate="visible"
-              variants={cardVariants} // ✅ ใช้ Framer Motion Animation
+              variants={cardVariants} 
             >
               <Card
                 onClick={() => {

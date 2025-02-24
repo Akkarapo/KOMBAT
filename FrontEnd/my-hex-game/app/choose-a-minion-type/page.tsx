@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,11 +14,17 @@ const strategyIcons: Record<string, string> = {
 const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const count = parseInt(searchParams.get("count") || "0", 10);
+  const countFromURL = parseInt(searchParams.get("count") || localStorage.getItem("minionCount") || "1", 10);
+  
   const { minions, setMinionData, getMinionData, lastSelectedMinionId, setLastSelectedMinion } = useUserStrategy();
 
+  const [count, setCount] = useState(countFromURL);
   const [selected, setSelected] = useState<number | null>(lastSelectedMinionId ? lastSelectedMinionId - 1 : 0);
   const [minionData, setMinionDataState] = useState<{ name: string; defense: string; strategy: string }[]>(Array.from({ length: count }, () => ({ name: "", defense: "", strategy: "" })));
+
+  useEffect(() => {
+    localStorage.setItem("minionCount", count.toString()); // ✅ บันทึกค่า count
+  }, [count]);
 
   useEffect(() => {
     setMinionDataState(
@@ -40,35 +47,23 @@ const ChooseMinionType: React.FC = () => {
   };
 
   const handleConfirm = () => {
-    const incompleteIndex = minionData.findIndex(
-      (minion) => !minion.name || !minion.defense || !minion.strategy
-    );
-
-    if (incompleteIndex !== -1) {
-      if (selected !== incompleteIndex) {
-        setSelected(incompleteIndex);
-        setLastSelectedMinion(incompleteIndex + 1);
-      }
-      return;
-    }
-
-    router.push("/configurationPage");
+    localStorage.setItem("minionCount", count.toString()); // ✅ บันทึกค่าก่อนเปลี่ยนหน้า
+    router.push(`/configurationPage?count=${count}`); // ✅ ส่งค่า count ไปด้วย
   };
 
   const handleGoToMenu = () => {
-    router.push("/pageMenu");
+    router.push("/choose-minions");
   };
 
   const handleChooseStrategy = () => {
     if (selected !== null) {
-      // ✅ ถ้า Minion ยังไม่มีข้อมูลเลย ให้สร้างข้อมูลเริ่มต้นก่อนเลือก Strategy
       if (!getMinionData(selected + 1)) {
         setMinionData(selected + 1, "", "");
       }
       setLastSelectedMinion(selected + 1);
       router.push(`/choose-strategy?minionId=${selected + 1}&count=${count}`);
     }
-  };  
+  };
 
   const handleNameChange = (index: number, value: string) => {
     setMinionDataState((prev) =>
