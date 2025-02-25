@@ -7,7 +7,7 @@ interface MinionsCardProps {
   onClose: () => void;
   onSelect: (card: string) => void;
   minionCount: number;
-  minionNames: string[]; // ✅ เพิ่ม prop นี้ให้รองรับ
+  minionNames: string[];
 }
 
 const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, minionCount, minionNames }) => {
@@ -24,30 +24,35 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-4">Select a Minion Card</h2>
-            <div className="grid grid-cols-3 gap-4">
+        <motion.div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={onClose} // ✅ ปิด Popup เมื่อกดพื้นที่ด้านนอก
+        >
+          <div 
+            className="flex flex-col items-center" 
+            onClick={(e) => e.stopPropagation()} // ✅ ป้องกันการปิด Popup เมื่อกดที่การ์ด
+          >
+            {/* ✅ ใช้ flex และ gap-6 ให้การ์ดอยู่ตรงกลางแนวนอน */}
+            <div className="flex flex-wrap justify-center gap-6">
               {Array.from({ length: minionCount }, (_, index) => (
-                <button
-                  key={index}
-                  className="relative w-[150px] h-[200px] bg-gray-200 rounded-lg hover:bg-gray-300 transition"
-                  onClick={() => onSelect(minionNames[index])} // ✅ ใช้ชื่อมินเนี่ยนที่ได้จาก props
-                >
-                  <img
-                    src={minionImages[index + 1] || "/defaultCard.png"}
-                    alt={minionNames[index]} // ✅ แสดงชื่อที่ตั้งไว้จริง ๆ
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <span className="absolute top-2 left-2 text-black font-bold bg-white px-2 py-1 rounded">
-                    {minionNames[index]} {/* ✅ แสดงชื่อบนการ์ด */}
+                <div key={index} className="flex flex-col items-center">
+                  {/* ✅ ชื่อมินเนี่ยนเป็นสีดำ */}
+                  <span className="text-black font-bold text-lg mt-[-20px] mb-2">
+                    {minionNames[index]}
                   </span>
-                </button>
+                  <button
+                    className="w-[180px] h-[240px] bg-transparent rounded-lg hover:scale-105 transition transform"
+                    onClick={() => onSelect(minionNames[index])}
+                  >
+                    <img
+                      src={minionImages[index + 1] || "/defaultCard.png"}
+                      alt={minionNames[index]}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </button>
+                </div>
               ))}
             </div>
-            <button className="mt-4 text-red-500 font-bold" onClick={onClose}>
-              Close
-            </button>
           </div>
         </motion.div>
       )}
