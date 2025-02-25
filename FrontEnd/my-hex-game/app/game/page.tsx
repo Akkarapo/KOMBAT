@@ -4,16 +4,25 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import HexGrid from "../../components/HexGrid";
-import Turn from "../../components/Turn";
+import MinionsCard from "./minionsCard";
+import { useUserStrategy, UserStrategyProvider } from "../choose-strategy/userStrategyData";
 
 const Page = () => {
   const searchParams = useSearchParams();
+  const { minions } = useUserStrategy(); // ✅ ดึงข้อมูลมินเนี่ยนจาก Context
   const [mode, setMode] = useState<string>("Loading...");
+  const [minionCount, setMinionCount] = useState<number>(0);
 
   useEffect(() => {
     const gameMode = searchParams.get("mode") || "Default";
     setMode(gameMode);
+
+    const count = parseInt(searchParams.get("count") || "0", 10);
+    setMinionCount(count);
   }, [searchParams]);
+
+  // ✅ ดึงชื่อมินเนี่ยนที่ถูกต้อง
+  const minionNames = minions.map((minion) => minion.name);
 
   const [greenCoin, setGreenCoin] = useState<number>(2000);
   const [redCoin, setRedCoin] = useState<number>(2000);
@@ -21,6 +30,9 @@ const Page = () => {
   const [canAct, setCanAct] = useState<boolean>(true);
   const [locked, setLocked] = useState<boolean>(false);
   const [currentColor, setCurrentColor] = useState<string>("green");
+
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const initialGreenHexes = ["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"];
 
@@ -37,29 +49,63 @@ const Page = () => {
     }
   };
 
+  const openPopup = () => setShowPopup(true);
+  const closePopup = () => setShowPopup(false);
+  const selectCard = (card: string) => {
+    setSelectedCard(card);
+    closePopup();
+  };
+
   return (
-    <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
-      <motion.div className="absolute w-[250px] h-[90px]" initial={{ y: "-100px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} style={{ backgroundImage: "url('/playerRed.png')", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", top: "20px", left: "30px" }}>
-        <motion.span className="absolute text-2xl font-bold text-black" initial={{ y: "-20px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 1, ease: "easeOut" }} style={{ top: "25px", left: "100px" }}>Player 2</motion.span>
-      </motion.div>
-      <div className="relative w-[600px] h-[600px] flex items-center justify-center">
-        <HexGrid deductMoney={deductGreenCoin} greenCoin={greenCoin} canAct={canAct} locked={locked} setLocked={setLocked} currentColor={currentColor} initialGreenHexes={initialGreenHexes} />
-      </div>
-      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
-        <div className="text-4xl font-bold text-black">{remainingTurns}</div>
-        <button onClick={handleAction} disabled={remainingTurns <= 0}>
-          <img src="/SandTime.png" alt="Turn Timer" className={`w-[100px] h-[100px] transition-opacity ${remainingTurns <= 0 ? "opacity-50" : "opacity-100 hover:opacity-80"}`} />
+    <UserStrategyProvider>
+      <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
+        {/* Player 2 Info */}
+        <motion.div className="absolute w-[250px] h-[90px]" style={{ top: "20px", left: "30px", backgroundImage: "url('/playerRed.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat" }}>
+          <motion.span className="absolute text-2xl font-bold text-black" style={{ top: "25px", left: "100px" }}>
+            Player 2
+          </motion.span>
+        </motion.div>
+
+        {/* Player 1 Info */}
+        <motion.div className="absolute w-[250px] h-[90px]" style={{ bottom: "20px", right: "30px", backgroundImage: "url('/playerGreen.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat" }}>
+          <motion.span className="absolute text-2xl font-bold text-black" style={{ top: "25px", left: "60px" }}>
+            Player 1
+          </motion.span>
+        </motion.div>
+
+        {/* HexGrid */}
+        <div className="relative w-[600px] h-[600px] flex items-center justify-center">
+          <HexGrid deductMoney={deductGreenCoin} greenCoin={greenCoin} canAct={canAct} locked={locked} setLocked={setLocked} currentColor={currentColor} initialGreenHexes={initialGreenHexes} />
+        </div>
+
+        {/* Turns Counter */}
+        <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+          <div className="text-4xl font-bold text-black">{remainingTurns}</div>
+          <button onClick={handleAction} disabled={remainingTurns <= 0}>
+            <img src="/SandTime.png" alt="Turn Timer" className={`w-[100px] h-[100px] ${remainingTurns <= 0 ? "opacity-50" : "opacity-100 hover:opacity-80"}`} />
+          </button>
+        </div>
+
+        {/* Green Coin Display */}
+        <div className="absolute right-14 bottom-72 flex items-center" style={{ gap: "10px" }}>
+          <span className="text-gray-700 text-2xl font-bold">{greenCoin}</span>
+          <img src="/Coin2.png" alt="Coin" className="w-[50px] h-[50px]" />
+        </div>
+
+        {/* ปุ่มเลือกการ์ด */}
+        <button className="absolute top-10 right-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition" onClick={openPopup}>
+          Choose Minion
+        </button>
+
+        {/* Minions Card Popup */}
+        <MinionsCard isOpen={showPopup} onClose={closePopup} onSelect={selectCard} minionCount={minionCount} minionNames={minionNames} />
+
+        {/* Back to Menu Button */}
+        <button className="absolute bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-md text-lg font-bold hover:bg-red-700 transition" onClick={() => (window.location.href = "/pageMenu")}>
+          Back to Menu
         </button>
       </div>
-      <div className="absolute right-14 bottom-72 flex items-center" style={{ gap: '10px' }}>
-        <span className="text-gray-700 text-2xl font-bold">{greenCoin}</span>
-        <img src="/Coin2.png" alt="Coin" className="w-[50px] h-[50px]" />
-      </div>
-      <motion.div className="absolute w-[250px] h-[90px]" initial={{ y: "100px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} style={{ backgroundImage: "url('/playerGreen.png')", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", bottom: "20px", right: "30px" }}>
-        <motion.span className="absolute text-2xl font-bold text-black" initial={{ y: "20px", opacity: 0 }} animate={{ y: "0px", opacity: 1 }} transition={{ duration: 1, ease: "easeOut" }} style={{ top: "25px", left: "60px" }}>Player 1</motion.span>
-      </motion.div>
-      <button className="absolute bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-md text-lg font-bold hover:bg-red-700 transition" onClick={() => window.location.href = "/pageMenu"}>Back to Menu</button>
-    </div>
+    </UserStrategyProvider>
   );
 };
 

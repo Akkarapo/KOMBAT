@@ -47,6 +47,7 @@ const ChooseMinionType: React.FC = () => {
   };
 
   const handleConfirm = () => {
+    
     // หา Minion ตัวแรกที่ยังกรอกข้อมูลไม่ครบ
     const incompleteIndex = minionData.findIndex(
       minion => minion.name.trim() === "" || minion.defense.trim() === "" || minion.strategy.trim() === ""

@@ -44,8 +44,10 @@ const ConfigurationPage = () => {
     }
 
     localStorage.setItem("hexConfig", JSON.stringify(config));
-    console.log("Configuration Saved:", config);
-    router.push("/game");
+
+    // ✅ ส่งค่าทั้ง config และ count ไปที่ /game
+    const queryParams = new URLSearchParams({ count, ...config }).toString();
+    router.push(`/game?${queryParams}`);
   };
 
   const handleBack = () => {
