@@ -109,6 +109,7 @@ public class GameState {
                 System.out.println("6.End Turn");
                 System.out.print("Your Choice:");
 
+
                 //รับคำสั่งที่จะทดสอบ
                 Scanner Choice = new Scanner(System.in);
                 int playerChoice = Choice.nextInt();
