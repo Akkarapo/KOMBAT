@@ -32,6 +32,7 @@ public class GameState {
     GameState(int spawn_cost,int hex_purchase_cost,long init_budget,int init_hp,int turn_budget,int max_budget,int interest_pct,int max_turn,int max_spawns) {
        config = new Configloader(spawn_cost,hex_purchase_cost,init_budget,init_hp,turn_budget,max_budget,interest_pct,max_turn,max_spawns);
 
+       //set row and col แต่ละช่อง
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 gameBoard[i][j] = new Hex(i,j);
