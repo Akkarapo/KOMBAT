@@ -18,6 +18,18 @@ public class GameState {
     boolean spawnMinionPerTurn;
     boolean buyHexPerTurn;
 
+
+    /** Set ค่าใน Config และค่าตั้งต้นสำหรับผู้เล่นทั้งสองฝั่ง
+     *  @param spawn_cost           ค่าลง minion
+     *  @param hex_purchase_cost    ค่าซื้อช่อง
+     *  @param init_budget          เงินตั้งต้น
+     *  @param init_hp              new spawn Minion HP
+     *  @param turn_budget          เงินเพิ่มแต่ละตา
+     *  @param max_budget           เงินสูงสุด
+     *  @param interest_pct         อัตราดอกเบี้ยพื้นฐาน
+     *  @param max_turn             เทิร์นสูงสุด
+     *  @param max_spawns           Minion สูงสุด
+     */
     GameState(int spawn_cost,int hex_purchase_cost,long init_budget,int init_hp,int turn_budget,int max_budget,int interest_pct,int max_turn,int max_spawns) {
        config = new Configloader(spawn_cost,hex_purchase_cost,init_budget,init_hp,turn_budget,max_budget,interest_pct,max_turn,max_spawns);
 
@@ -27,6 +39,7 @@ public class GameState {
             }
         }
 
+        //set ค่าและพื้นที่ของผู้เล่นแต่ละคน
         player1 = new Player("001",config.getInitBudget(),config.getMaxSpawns());
         gameBoard[6][6].setOwnerName(player1.getPlayerNumber());
         gameBoard[6][7].setOwnerName(player1.getPlayerNumber());
@@ -42,21 +55,29 @@ public class GameState {
         gameBoard[1][1].setOwnerName(player2.getPlayerNumber());
     }
 
+    /** วน loop ดำเนินเกมจนกว่าจะครบเทิร์นสูงสุดหรือ มีผู้เล่นแพ้ไปก่อน
+     *  มีการเรียกใช้คำสั่งต่างๆเพื่อดำเนินการเล่นเกม
+     *  หมายเหตุ:
+     *  1.จะมีการปรับปรุงย่อย Method อีกทีเนื่องจากหลายๆอย่างถูกใช้โดยตรงในนี้ โดยอาจมีมากกว่าที่เขียนเตรียมไว้ด้านล่าง
+     *  2.ยังไม่ได้ check กรณีแพ้เพราะมินเนี่ยนตายหมด
+     *  3.คลาสมินเนี่ยนยังบัคทำให้ยัง test การตีกันของมินเนี่ยนไม่ได้และยังจำกัดจำนวนครั้งการมูฟไม่ได้(ต้องการทำมินเนี่ยนบางตัวให้เดินได้มากกว่า 1 รอบ)
+     */
     void GameStart(){
         while(nowTurn<=config.getMaxTurns()){
 
-            if(nowTurn>1){
+            if(nowTurn>1){ //เพิ่มเงินให้ผู้เล่นเมื่อเริ่มเทิร์น
                 player1.getMoreBudget(GetMoreMoney(config.getInterestPct(),player1.getBudget(),nowTurn,config.getTurnBudget()));
                 player2.getMoreBudget(GetMoreMoney(config.getInterestPct(),player2.getBudget(),nowTurn,config.getTurnBudget()));
             }
 
+            //Set ค่าตั้งต้นแต่ละเทิร์นให้ผู้เล่น
             Player  currentPlayer = !(nowTurn % 2 == 0) ? player1 : player2;
             boolean playing = true;
             buyHexPerTurn   = true;
             spawnMinionPerTurn = true;
 
+            //เก็บ Hex ที่ผู้เล่นปัจจุบันเป็นเจ้าของมาไว้ดู
             Set<Hex> currPlayerHex = new HashSet<>();
-
             for(int i = 0; i < 8;i++) {
                 for(int j = 0; j < 8; j++) {
                     if(gameBoard[i][j].getOwnerName() == currentPlayer.getPlayerNumber()){
@@ -64,9 +85,9 @@ public class GameState {
                     }
                 }
             }
-
             Set<Hex> NearbySet = calculateNearbyHexes(currPlayerHex);
 
+            //สำหรับแสดงผลก่อนเชื่อม
             System.out.println("\n________________________________");
             System.out.println("Player : " + (!(nowTurn % 2 == 0) ? "1" : "2"));
             System.out.println("\nTurn "+nowTurn+" / 20");
@@ -75,9 +96,9 @@ public class GameState {
 
             while(playing) {
 
+                /*สำหรับทดสอบการทำงานก่อนเชื่อม โดยสั่งโดยตรงจากคีย์บอร์ด*/
                 System.out.println("\n--------------------------------------------\n");
                 System.out.println("Your budget: "+currentPlayer.getBudget());
-
                 System.out.println("\n--------------------------------------------\n");
                 System.out.println("\nChoices");
                 System.out.println("1.Show your nearby hex");
@@ -88,6 +109,7 @@ public class GameState {
                 System.out.println("6.End Turn");
                 System.out.print("Your Choice:");
 
+                //รับคำสั่งที่จะทดสอบ
                 Scanner Choice = new Scanner(System.in);
                 int playerChoice = Choice.nextInt();
 
@@ -136,7 +158,8 @@ public class GameState {
                         if(gameBoard[targetHex[0]][targetHex[1]].getOwnerName()!=currentPlayer.getPlayerNumber() ) System.out.println("\nNot your hex\n");
                         else if(currentPlayer.getBudget()< config.getSpawnCost()) System.out.println("\nNot enough budget\n");
                         else{
-                            Minion minion = new ShadowWarden(currentPlayer.getPlayerNumber(),config.getInitHP());
+                            //set for test
+                            Minion minion = new Minion(currentPlayer.getPlayerNumber(),config.getInitHP(),40);
                             gameBoard[targetHex[0]][targetHex[1]].setMinion(minion);
                             currentPlayer.useBudget(config.getSpawnCost());
                             spawnMinionPerTurn = false;
@@ -168,7 +191,8 @@ public class GameState {
                         }
                     }
                 }
-                else if(playerChoice == 5){//attack
+                //attack
+                else if(playerChoice == 5){
                     if(currentPlayer.getBudget()<1) System.out.println("U R too POOR");
                     else{
                         targetHex   = getRowAndCol("target");
@@ -185,12 +209,14 @@ public class GameState {
                         }
                     }
                 }
+                //End Game
                 else if(playerChoice == 6){
                     if(nowTurn % 2 == 0) player2 = currentPlayer;
                     else player1 = currentPlayer;
 
                     playing = false;
                 }
+                //กันใส่เลขผิดตอนเทส
                 else System.out.println("Invalid choice");
 
             }
@@ -202,6 +228,10 @@ public class GameState {
 
     }
 
+    /** Check Hex ที่ติดกันที่สามารถซื้อได้
+    *   @param currPlayerHex ช่องที่ผู้เล่นเป็นเจ้าของ
+     *  @return nearbySet
+    */
     private static Set<Hex> calculateNearbyHexes(Set<Hex> currPlayerHex) {
         Set<Hex> nearbySet = new HashSet<>();
 
@@ -218,16 +248,36 @@ public class GameState {
         return nearbySet;
     }
 
+    /** เงินที่ผู้เล่นจะได้ในแต่ละเทิร์น
+    *   @param Interest     ดอกเบี้ย
+    *   @param playerBudget เงินที่ผู้เล่นมี
+    *   @param nowTurn      Turn ปัจจุบัน
+    *   @param TurnBudget   เงินที่จะได้รับแบบคงที่ในแต่ละเทิร์น
+    *   @return เงินทั้งหมดที่ผู้เล่นต้องได้รับ
+    * */
     private static double GetMoreMoney(int Interest,long playerBudget,int nowTurn,int TurnBudget){
         return  (((double) Interest /100*log10(playerBudget)*nowTurn)+TurnBudget);
     }
 
+    /** ซื้อช่องเพิ่ม //ต้องไปเอาจากด้านบนมาใส่ในนี้
+    *   effects: ช่องจะมีเจ้าของ
+    *   @param targetHex    ช่องที่จะซื้อ
+    * */
     private void buyHex(int[] targetHex){}
 
-    private void moveMinion(int targetRow,int targetCol,int nowRow,int nowCol){
+    /** ซื้อช่องเพิ่ม //ต้องไปเอาจากด้านบนมาใส่ในนี้
+     *   effects: ช่องที่เคยมีมินเนี่ยนจะไม่มีมินเนี่ยน ช่องเป้าหมายที่ไม่มีมินเนี่ยนจะมีมินเนี่ยน
+     *   @param targetHex   ช่องที่จะซื้อ
+     *   @param nowHex      ช่องปัจจุบันของมินเนี่ยน
+     * */
+    private void moveMinion(int[] targetHex,int[] nowHex){
 
     }
 
+    /** สำหรับรับ Input Hex จากคีย์บอร์ด
+     *   @param hexType  สำหรับเป็นข้อความบอกแยกประเภทในการรับพิกัดช่อง
+     *   @return  พิกัดของHex
+     * */
     private int[] getRowAndCol(String hexType){
         int[] HexCoordinate = new int[2];
         System.out.print("Please enter " + hexType + " hex row:");
@@ -239,6 +289,11 @@ public class GameState {
         return HexCoordinate;
     }
 
+
+    /** สำหรับ check ผลแพ้ชนะโดยอิงจากจำนวนมินเนี่ยนก่อนเช็คด้วยผลเลือดรวม
+     *  ตอนนี้ยังเป็นแบบคร่าวๆสำหรับไว้ดูผ่าน Terminal อยู่
+     *   @param gameBoard  นำแต่ละตำแหน่งมาหา minion ของแต่ละคน
+     * */
     private static void checkWinner(Hex[][] gameBoard){
         int player1Minion=0,p1MinionSumHP=0;
         int player2Minion=0,p2MinionSumHP=0;
@@ -265,6 +320,11 @@ public class GameState {
         else System.out.println("Draw!");
     }
 
+    /** สำหรับแสดงกระดานเพื่อดูแต่ละช่องผ่าน Terminal โดยพยายามให้ใกล้เคียงตารางช่องหกเหลี่ยมที่สุด
+     *  มีการจำกัดข้อมูลโดยอ้างอิงเทิร์นผู้เล่น
+     *   @param gameBoard   นำข้อมูลบอร์ดมาแสดง
+     *   @param PlayerName  รับค่าว่าเป็นเทิร์นของใคร
+     * */
     private static void showBoard(Hex[][] gameBoard,String PlayerName){
         for (int i = 0; i < 48; i++) {
             for (int j = 0; j < 8; j++) {
