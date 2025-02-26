@@ -61,7 +61,6 @@ public class Hex {
 
     public int getCol() {   return col; }
 
-    public void moveMinion() {  minion.moveMinion();    }
 
     @Override
     public boolean equals(Object o) {

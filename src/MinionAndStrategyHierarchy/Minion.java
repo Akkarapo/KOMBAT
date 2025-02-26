@@ -1,19 +1,18 @@
 package com.example.demo.src.MinionAndStrategyHierarchy;
 //skill turn ละครั้ง
 public class Minion {
-    private final String ownerName;
-    private int minionMaxHP;
-    private int minionNowHP;
-    private final int minionATK;
-    private final int minionDEF;
-    private final int minionMaxHexMovement;
-    private int minionNowHexMovement;
+    private final String    ownerName;
+    private final int       minionMaxHP;
+    private int             minionNowHP;
+    private int             minionATK = 1;
+    private final int       minionDEF;
+    private final int       minionMaxHexMovement = 1;
+    private int             minionNowHexMovement;
     //int minionAttackRange;
-
     boolean isDead = false;
     //boolean alreadyUseSkill;
 
-    public Minion(String ownerName,int minionMaxHP, int minionATK, int minionDEF,int minionMaxHexMovement) {
+    public Minion(String ownerName,int minionMaxHP, int minionDEF) {
         this.ownerName = ownerName;
 
         this.minionMaxHP = minionMaxHP;

@@ -1,15 +1,15 @@
 package com.example.demo.src.Utilities;
 
 public class Configloader {
-    private int spawn_cost;          //ค่าลง
-    private int hex_purchase_cost;   //ซื้อช่อง
-    private long init_budget;        //เงินตั้งต้น
-    private int init_hp;             //new spawn Minion HP
-    private int turn_budget;         //เงินเพิ่มแต่ละตา
-    private long max_budget;         //เงินสูงสุด
-    private int interest_pct;        //อัตราดอกเบี้ยพื้นฐาน
-    private int max_turns;           //จนเทิร์นสูงสุด
-    private int max_spawns;          //Minion สูงสุด
+    private final int spawn_cost;          //ค่าลง
+    private final int hex_purchase_cost;   //ซื้อช่อง
+    private final long init_budget;        //เงินตั้งต้น
+    private final int init_hp;             //new spawn Minion HP
+    private final int turn_budget;         //เงินเพิ่มแต่ละตา
+    private final long max_budget;         //เงินสูงสุด
+    private final int interest_pct;        //อัตราดอกเบี้ยพื้นฐาน
+    private final int max_turns;           //จนเทิร์นสูงสุด
+    private final int max_spawns;          //Minion สูงสุด
 
     public Configloader(int spawn_cost,int hex_purchase_cost,long init_budget,int init_hp,int turn_budget,int max_budget,int interest_pct,int max_turns,int max_spawns) {
 
