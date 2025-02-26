@@ -69,8 +69,6 @@ public class testGetFrontend {
     public static void main(String[] args) {
         testGetFrontend Config = new testGetFrontend();
         Config.printConfig();
-
-
     }
 
 }
