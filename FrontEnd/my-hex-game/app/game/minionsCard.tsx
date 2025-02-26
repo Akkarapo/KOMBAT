@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 interface MinionsCardProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
   if (!isOpen) return null;
 
   const searchParams = useSearchParams();
+  const [activeIndex, setActiveIndex] = useState<number | null>(null); // ✅ เก็บสถานะปุ่ม Buy
 
   // ✅ ดึง `defenseData` จาก URL และแปลงเป็น JSON
   const defenseDataString = searchParams.get("defenseData") || "";
@@ -44,16 +46,23 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
 
   return (
     <AnimatePresence>
-  {isOpen && (
-    <motion.div 
-      className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center"
-      onClick={onClose}
-    >
-      <div className="flex flex-wrap justify-center gap-6" onClick={(e) => e.stopPropagation()}>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center"
+          onClick={() => {
+            setActiveIndex(null); // ✅ ซ่อนปุ่ม Buy
+            onClose(); // ✅ ปิด Popup MinionsCard
+          }}
+        >
+          <div className="flex flex-wrap justify-center gap-6" onClick={(e) => e.stopPropagation()}>
             {Array.from({ length: minionCount }).map((_, index) => {
               const minion = defenseDataArray.find((m) => m.id === index + 1);
               return (
-                <div key={index} className="relative flex flex-col items-center">
+                <div
+                  key={index}
+                  className="relative flex flex-col items-center"
+                  onMouseEnter={() => setActiveIndex(index)} // ✅ เมื่อชี้ที่การ์ด ให้แสดงปุ่ม Buy
+                >
                   {/* ✅ แสดงชื่อ Minion ที่ดึงจาก URL */}
                   <span className="text-black font-bold text-lg mt-[-20px] mb-2">
                     {minion?.name || `Minion ${index + 1}`}
@@ -87,14 +96,36 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
                         className="absolute"
                         style={{
                           top: "15px",
-                          right: "30px", // ✅ ขยับไปทางซ้ายอีก 40px
+                          right: "30px",
                           width: "40px",
                           height: "40px",
-                          opacity: 0.2, // ✅ ปรับความโปร่งใสเหลือ 20%
+                          opacity: 0.2,
                         }}
                       />
                     )}
                   </button>
+
+                  {/* ✅ แสดงปุ่ม "BlackBuy.png" เมื่อมีการเลือกการ์ด */}
+                  {activeIndex === index && (
+                    <div className="absolute bottom-[-50px] flex justify-center w-full">
+                      <motion.button
+                        onClick={(e) => {
+                          e.stopPropagation(); // ✅ ป้องกัน event click ซ้อนกัน
+                          console.log(`Buying minion: ${minion?.name}`);
+                        }}
+                        className="block object-contain"
+                        style={{
+                          width: "120px",
+                          height: "50px",
+                          background: `url('/BlackBuy.png') no-repeat center/contain`,
+                        }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
