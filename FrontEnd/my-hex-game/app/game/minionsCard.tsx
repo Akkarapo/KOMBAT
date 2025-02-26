@@ -35,14 +35,21 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
     5: "/CardMinion5.png",
   };
 
+  // ✅ ไอคอนของแต่ละกลยุทธ์
+  const strategyIcons: Record<string, string> = {
+    "Strategy 1": "/Strategy1Icon.png",
+    "Strategy 2": "/Strategy2Icon.png",
+    "Strategy 3": "/Strategy3Icon.png",
+  };
+
   return (
     <AnimatePresence>
-      {isOpen && (
-        <motion.div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          onClick={onClose}
-        >
-          <div className="flex flex-wrap justify-center gap-6" onClick={(e) => e.stopPropagation()}>
+  {isOpen && (
+    <motion.div 
+      className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div className="flex flex-wrap justify-center gap-6" onClick={(e) => e.stopPropagation()}>
             {Array.from({ length: minionCount }).map((_, index) => {
               const minion = defenseDataArray.find((m) => m.id === index + 1);
               return (
@@ -71,6 +78,22 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, onSelect, mi
                     <div className="absolute" style={{ top: "55px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
                       {searchParams.get("init_hp") || "0"} {/* ค่าเลือด */}
                     </div>
+
+                    {/* ✅ แสดงไอคอนของกลยุทธ์ที่เลือก (ปรับตำแหน่งและ opacity) */}
+                    {minion?.strategy && strategyIcons[minion.strategy] && (
+                      <img
+                        src={strategyIcons[minion.strategy]}
+                        alt={minion.strategy}
+                        className="absolute"
+                        style={{
+                          top: "15px",
+                          right: "30px", // ✅ ขยับไปทางซ้ายอีก 40px
+                          width: "40px",
+                          height: "40px",
+                          opacity: 0.2, // ✅ ปรับความโปร่งใสเหลือ 20%
+                        }}
+                      />
+                    )}
                   </button>
                 </div>
               );
