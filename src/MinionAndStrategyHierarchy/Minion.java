@@ -1,13 +1,13 @@
 package com.example.demo.src.MinionAndStrategyHierarchy;
-
+//skill turn ละครั้ง
 public class Minion {
-    String ownerName;
-    int minionMaxHP;
-    int minionNowHP;
-    int minionATK;
-    int minionDEF;
-    int minionMaxHexMovement;
-    int minionNowHexMovement;
+    private final String ownerName;
+    private int minionMaxHP;
+    private int minionNowHP;
+    private final int minionATK;
+    private final int minionDEF;
+    private final int minionMaxHexMovement;
+    private int minionNowHexMovement;
     //int minionAttackRange;
 
     boolean isDead = false;
@@ -36,28 +36,18 @@ public class Minion {
         if(minionNowHP <= 0) isDead = true;
     }
 
-    public boolean isDead(){
-        return isDead;
-    }
-
-    void setMinionMaxHexMovement(int minionMaxHexMovement) {
-        this.minionMaxHexMovement = minionMaxHexMovement;
-        this.minionNowHexMovement = this.minionMaxHexMovement;
-    }
-
-    public void moveMinion(){
-        if(minionNowHexMovement>0) minionNowHexMovement -= 1;
-    }
+    public void moveMinion(){ if(minionNowHexMovement>0) minionNowHexMovement -= 1;}
 
     public boolean canMove(){
         return getMinionNowHexMovement()>0;
     }
-    public String getOwnerName() {
-        return ownerName;
-    }
 
-    int getMinionMaxHP(){
-        return minionMaxHP;
+    public void resetNowHexMovement(){ minionNowHexMovement = minionMaxHexMovement;}
+
+    public String getOwnerName() {return ownerName;}
+
+    public boolean isDead(){
+        return isDead;
     }
 
     public int getMinionNowHP(){
@@ -68,12 +58,12 @@ public class Minion {
         return minionDEF;
     }
 
-    int getMinionMaxHexMovement(){
-        return minionMaxHexMovement;
-    }
-
     int getMinionNowHexMovement(){
         return minionNowHexMovement;
     }
 
+    public int getMinionATK() {return minionATK;}
+
+    //int getMinionMaxHexMovement(){return minionMaxHexMovement;}
+    //int getMinionMaxHP(){return minionMaxHP;}
 }

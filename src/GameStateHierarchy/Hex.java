@@ -5,10 +5,10 @@ import java.util.Objects;
 
 public class Hex {
     //Player owner;
-    String ownerName;
-    Minion minion;
-    int row;
-    int col;
+    private String ownerName;
+    private Minion minion;
+    private final int row;
+    private final int col;
 
     public Hex(int row, int col){
         this.row = row;
@@ -17,7 +17,7 @@ public class Hex {
         this.minion = null;
     }
 
-    void setMinion(Minion minion){
+    public void setMinion(Minion minion){
             this.minion = minion;
     }
 
@@ -55,21 +55,13 @@ public class Hex {
         return minion.canMove();
     }
 
-    public Minion getMinion() {
-        return minion;
-    }
+    public Minion getMinion() { return minion;  }
 
-    public int getRow() {
-        return row;
-    }
+    public int getRow() {   return row; }
 
-    public int getCol() {
-        return col;
-    }
+    public int getCol() {   return col; }
 
-    public void moveMinion() {
-        minion.moveMinion();
-    }
+    public void moveMinion() {  minion.moveMinion();    }
 
     @Override
     public boolean equals(Object o) {
@@ -83,10 +75,9 @@ public class Hex {
     public int hashCode() {
         return Objects.hash(row, col);
     }
-
-    // วิธีการแสดงผล
+    /*
     @Override
     public String toString() {
         return "Hex[" + row + "," + col + "]";
-    }
+    }*/
 }

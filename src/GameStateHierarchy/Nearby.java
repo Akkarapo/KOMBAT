@@ -39,7 +39,7 @@ public class Nearby {
         Set<Hex> NearbySet = new HashSet<>();
 
         for (Hex hex : initialPositions) {
-            Set<Hex> neighbors = getNearby(hex.row, hex.col);
+            Set<Hex> neighbors = getNearby(hex.getRow(), hex.getCol());
 
             for (Hex neighbor : neighbors) {
                 if (!initialPositions.contains(neighbor)) {

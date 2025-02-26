@@ -30,7 +30,4 @@ public class Player {
         return PlayerNumber;
     }
 
-    //public void removeMinion(int row, int col){}
-
-
 }

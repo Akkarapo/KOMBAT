@@ -8,6 +8,8 @@ public class ShadowWarden extends Minion {
 
     @Override
     public int minionAttack(){
-        return minionATK*2;
+        return 2;
     }
+
+    
 }
