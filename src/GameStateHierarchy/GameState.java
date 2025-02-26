@@ -18,7 +18,6 @@ public class GameState {
     boolean spawnMinionPerTurn;
     boolean buyHexPerTurn;
 
-
     /** Set ค่าใน Config และค่าตั้งต้นสำหรับผู้เล่นทั้งสองฝั่ง
      *  @param spawn_cost           ค่าลง minion
      *  @param hex_purchase_cost    ค่าซื้อช่อง
