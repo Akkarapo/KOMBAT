@@ -45,9 +45,14 @@ export default function ChooseStrategy() {
   // ✅ บันทึก Strategy ที่เลือกลง context และกลับไป choose-a-minion-type
   const handleConfirm = () => {
     console.log("Selected strategy:", selectedStrategy);
-    setStrategy(parseInt(minionId, 10), selectedStrategy); // ✅ บันทึก strategy สำหรับ Minion ที่เลือก
-    router.push(`/choose-a-minion-type?count=${count}`); // ✅ กลับไปหน้ากำหนดค่า Minion
-  };
+    setStrategy(parseInt(minionId, 10), selectedStrategy);
+  
+    // ✅ ดึงค่า defenseData ที่เก็บค่าของทุก Minion
+    const defenseData = searchParams.get("defenseData") || "";
+    
+    // ✅ เปลี่ยนเส้นทางไปหน้ากรอกชื่อและค่าป้องกันของ Minion
+    router.push(`/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${defenseData}`);
+  };  
 
   // ✅ ปุ่ม Back กลับไปยังหน้าก่อนหน้า
   const handleBack = () => {

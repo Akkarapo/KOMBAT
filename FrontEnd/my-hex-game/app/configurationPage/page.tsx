@@ -37,18 +37,23 @@ const ConfigurationPage = () => {
 
   const handleConfirm = () => {
     const emptyFields = Object.keys(config).filter((key) => config[key as keyof typeof config] === "");
-
+  
     if (emptyFields.length > 0) {
       setMissingFields(emptyFields);
       return;
     }
-
+  
     localStorage.setItem("hexConfig", JSON.stringify(config));
-
-    // ✅ ส่งค่าทั้ง config และ count ไปที่ /game
-    const queryParams = new URLSearchParams({ count, ...config }).toString();
+  
+    // ✅ ดึงค่าทั้งหมดจาก URL
+    const params = new URLSearchParams(window.location.search);
+    const count = params.get("count") || "1";
+    const defenseData = params.get("defenseData") || "";
+  
+    // ✅ ส่งค่า `count` + `defenseData` + ค่าที่ตั้งค่ามาไปยัง `/game`
+    const queryParams = new URLSearchParams({ count, defenseData, ...config }).toString();
     router.push(`/game?${queryParams}`);
-  };
+  };  
 
   const handleBack = () => {
     localStorage.setItem("hexConfig", JSON.stringify(config)); // ✅ บันทึก config ก่อนออกจากหน้า

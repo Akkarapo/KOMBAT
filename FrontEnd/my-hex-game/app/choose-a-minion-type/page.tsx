@@ -47,24 +47,31 @@ const ChooseMinionType: React.FC = () => {
   };
 
   const handleConfirm = () => {
-    
-    // หา Minion ตัวแรกที่ยังกรอกข้อมูลไม่ครบ
+    // ✅ ตรวจสอบว่ามี Minion ตัวไหนที่ยังไม่กรอกข้อมูลครบ
     const incompleteIndex = minionData.findIndex(
       minion => minion.name.trim() === "" || minion.defense.trim() === "" || minion.strategy.trim() === ""
     );
   
     if (incompleteIndex !== -1) {
-      // ถ้ายังมีตัวที่กรอกไม่ครบ ให้เลือกตัวนั้นแทน
+      // ✅ ถ้ามีให้เลือกตัวที่ยังไม่ครบก่อน
       setSelected(incompleteIndex);
       setLastSelectedMinion(incompleteIndex + 1);
       return; // หยุดการทำงาน ไม่ไปหน้าถัดไป
     }
   
-    // ถ้ากรอกครบทุกตัวแล้วให้เปลี่ยนหน้า
-    localStorage.setItem("minionCount", count.toString());
-    router.push(`/configurationPage?count=${count}`);
-  };  
-
+    // ✅ สร้าง query string `defenseData` ให้เก็บค่าของทุก Minion
+    const defenseData = minionData
+      .map((minion, index) => `${index + 1}:${encodeURIComponent(minion.name)}:${minion.defense}:${minion.strategy}`)
+      .join(",");
+  
+    const params = new URLSearchParams();
+    params.set("count", count.toString());
+    params.set("defenseData", defenseData);
+  
+    // ✅ เปลี่ยนหน้าไปยัง `configurationPage` และส่งค่าทั้งหมดไป
+    router.push(`/configurationPage?${params.toString()}`);
+  };
+    
   const handleGoToMenu = () => {
     router.push("/choose-minions");
   };
