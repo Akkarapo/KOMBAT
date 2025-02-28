@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MinionStrategyInformation from "./minionStrategyInformation"; // ✅ Import ป๊อปอัพข้อมูลกลยุทธ์
 
 interface MinionsCardProps {
@@ -10,16 +10,34 @@ interface MinionsCardProps {
   onClose: () => void;
   minionCount: number;
   minionNames: string[];
+  onSelect?: (card: string) => void; // ✅ เพิ่ม onSelect (ไม่บังคับ)
 }
 
-const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount, minionNames }) => {
-  if (!isOpen) return null;
-
+const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount, minionNames, onSelect }) => {
   const searchParams = useSearchParams();
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [isMinionCardOpen, setIsMinionCardOpen] = useState(isOpen);
+  const [wasMinionCardOpen, setWasMinionCardOpen] = useState(false);
   const [selectedMinion, setSelectedMinion] = useState<{ id: number; name: string; defense: number; strategy: string } | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  // ✅ ดึง `defenseData` จาก URL และแปลงเป็น JSON
+  useEffect(() => {
+    if (selectedMinion) {
+      setWasMinionCardOpen(true);
+      setIsMinionCardOpen(false);
+    }
+  }, [selectedMinion]);
+
+  useEffect(() => {
+    if (!selectedMinion && wasMinionCardOpen) {
+      setIsMinionCardOpen(true);
+      setWasMinionCardOpen(false);
+    }
+  }, [selectedMinion]);
+
+  useEffect(() => {
+    setIsMinionCardOpen(isOpen);
+  }, [isOpen]);
+
   const defenseDataString = searchParams.get("defenseData") || "";
   const defenseDataArray = defenseDataString
     ? defenseDataString.split(",").map((entry) => {
@@ -36,7 +54,6 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
     5: "/CardMinion5.png",
   };
 
-  // ✅ ไอคอนของแต่ละกลยุทธ์
   const strategyIcons: Record<string, string> = {
     "Strategy 1": "/Strategy1Icon.png",
     "Strategy 2": "/Strategy2Icon.png",
@@ -46,11 +63,12 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
   return (
     <>
       <AnimatePresence>
-        {isOpen && (
+        {isMinionCardOpen && (
           <motion.div
             className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center"
             onClick={() => {
               setActiveIndex(null);
+              setIsMinionCardOpen(false);
               onClose();
             }}
           >
@@ -62,8 +80,8 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
                     key={index}
                     className="relative flex flex-col items-center"
                     onMouseEnter={() => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex(null)}
                   >
-                    {/* ✅ แสดงชื่อ Minion */}
                     <span className="text-black font-bold text-lg mt-[-20px] mb-2">
                       {minion?.name || `Minion ${index + 1}`}
                     </span>
@@ -72,6 +90,7 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
                       onClick={() => {
                         if (minion) {
                           setSelectedMinion(minion);
+                          onSelect?.(minion.name);
                         }
                       }}
                     >
@@ -81,18 +100,16 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
                         className="w-full h-full object-contain rounded-lg"
                       />
 
-                      {/* ✅ แสดงค่าป้องกัน (Defense) ที่ถูกต้อง */}
                       <div className="absolute" style={{ top: "5px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-                        {searchParams.get("spawn_cost") || "0"} {/* ราคา */}
+                        {searchParams.get("spawn_cost") || "0"}
                       </div>
                       <div className="absolute" style={{ top: "30px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-                        {minion?.defense ?? "0"} {/* ค่าป้องกัน */}
+                        {minion?.defense ?? "0"}
                       </div>
                       <div className="absolute" style={{ top: "55px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-                        {searchParams.get("init_hp") || "0"} {/* ค่าเลือด */}
+                        {searchParams.get("init_hp") || "0"}
                       </div>
 
-                      {/* ✅ แสดงไอคอนกลยุทธ์ */}
                       {minion?.strategy && strategyIcons[minion.strategy] && (
                         <img
                           src={strategyIcons[minion.strategy]}
@@ -109,8 +126,8 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
                       )}
                     </button>
 
-                    {/* ✅ แสดงปุ่ม BUY สีดำ เมื่อ Hover */}
-                    {activeIndex === index && (
+                    {/* ✅ ปุ่ม BUY สีดำแสดงเมื่อ hover */}
+                    {activeIndex === index && isMinionCardOpen && (
                       <div className="absolute bottom-[-50px] flex justify-center w-full">
                         <motion.button
                           onClick={(e) => {
@@ -138,10 +155,9 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
         )}
       </AnimatePresence>
 
-      {/* ✅ ป๊อปอัพแสดงข้อมูลกลยุทธ์ */}
       {selectedMinion && (
         <MinionStrategyInformation
-          minionId={selectedMinion.id} // ✅ ส่ง ID ของมินเนี่ยนไปยัง popup
+          minionId={selectedMinion.id}
           onClose={() => setSelectedMinion(null)}
         />
       )}
