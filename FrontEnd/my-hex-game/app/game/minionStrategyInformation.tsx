@@ -35,88 +35,130 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({ m
 
   return (
     <motion.div
-      style={{
-        position: "fixed",
-        inset: "0px",
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px"
-      }}
+      className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
-      <div
+      <motion.div
         style={{
           display: "flex",
-          backgroundColor: "white",
-          padding: "24px",
-          borderRadius: "12px",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-          maxWidth: "700px",
-          width: "100%"
+          flexDirection: "row",
+          backgroundColor: "transparent",
+          padding: "16px",
+          maxWidth: "1000px",
+          width: "100%",
+          alignItems: "center",
         }}
         onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
       >
-        {/* ✅ แสดงการ์ดมินเนี่ยนด้านซ้าย */}
-        <div style={{ position: "relative", width: "190px", height: "250px", flexShrink: 0 }}>
-          <img src={image} alt={minion.name} style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px" }} />
+        {/* ✅ การ์ดมินเนี่ยนด้านซ้าย */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: "bold",
+              marginBottom: "10px",
+              color: "black",
+            }}
+          >
+            {minion.name}
+          </h2>
 
-          {/* ✅ แสดงค่าต่างๆ บนการ์ด */}
-          <div style={{ position: "absolute", top: "8px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-            {spawnCost}
+          <div style={{ position: "relative", width: "190px", height: "250px" }}>
+            <img src={image} alt={minion.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+
+            {/* ✅ แสดงค่าต่างๆ บนการ์ด */}
+            <div style={{ position: "absolute", top: "8px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+              {spawnCost}
+            </div>
+            <div style={{ position: "absolute", top: "38px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+              {minion.defense}
+            </div>
+            <div style={{ position: "absolute", top: "68px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+              {hp}
+            </div>
           </div>
-          <div style={{ position: "absolute", top: "38px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-            {minion.defense}
-          </div>
-          <div style={{ position: "absolute", top: "68px", left: "60px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
-            {hp}
-          </div>
+
+          {/* ✅ ปุ่ม BUY สีดำอยู่ติดด้านล่างการ์ด */}
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Buying minion: ${minion.name}`);
+            }}
+            style={{
+              display: "block",
+              width: "120px",
+              height: "50px",
+              background: `url('/BlackBuy.png') no-repeat center/contain`,
+              border: "none",
+              cursor: "pointer",
+              marginTop: "10px",
+            }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+          />
         </div>
 
-        {/* ✅ แสดงข้อมูลกลยุทธ์ */}
-        <div style={{ flexGrow: 1, marginLeft: "24px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "bold" }}>{minion.name}</h2>
-          <pre
+        {/* ✅ ช่องข้อมูลกลยุทธ์ด้านขวา (ขนาดเท่ากันทุกมินเนี่ยน) */}
+        <div
+          style={{
+            width: "700px", // ✅ กำหนดขนาดให้เท่ากันทุกตัว
+            height: "500px",
+            display: "flex",
+            flexDirection: "column",
+            marginLeft: "24px",
+          }}
+        >
+          <h2 style={{ fontSize: "20px", fontWeight: "normal", marginBottom: "10px", color: "black" }}>Strategy</h2>
+          <div
             style={{
-              backgroundColor: "#F3F4F6",
+              backgroundColor: "rgba(0, 0, 0, 0.7)", // ✅ สีเข้มขึ้นให้มองเห็นชัด
               padding: "16px",
-              borderRadius: "8px",
+              borderRadius: "12px",
               overflowY: "auto",
-              maxHeight: "200px",
-              fontSize: "14px",
-              whiteSpace: "pre-wrap"
+              height: "100%", // ✅ ทำให้เต็มขนาดที่กำหนด
+              fontSize: "16px",
+              whiteSpace: "pre-wrap",
+              boxShadow: "inset 0px 0px 8px rgba(0, 0, 0, 0.3)",
+              color: "white",
+              scrollbarWidth: "thin",
+              scrollbarColor: "gray transparent",
             }}
           >
             {strategyText}
-          </pre>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* ✅ ปุ่ม Buy สีดำ */}
-      <div style={{ position: "absolute", bottom: "40px" }}>
-        <motion.button
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log(`Buying minion: ${minion.name}`);
-          }}
-          style={{
-            display: "block",
-            width: "120px",
-            height: "50px",
-            background: `url('/BlackBuy.png') no-repeat center/contain`,
-            border: "none",
-            cursor: "pointer"
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.2 }}
-        />
-      </div>
+      {/* ✅ CSS ปรับแต่ง Scrollbar */}
+      <style jsx>{`
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: gray;
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: darkgray;
+        }
+      `}</style>
     </motion.div>
   );
 };
