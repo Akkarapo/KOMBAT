@@ -37,7 +37,6 @@ const HexGrid: React.FC<HexGridProps> = ({
 
   const calculateAdjacentHexes = (currentHexes: Record<string, string>) => {
     const adjacentHexes: Record<string, string> = Object.create(null);
-
     Object.keys(currentHexes).forEach(hex => {
       const color = currentHexes[hex];
       if (color !== "#68B671" && color !== "#B6696B") return;
@@ -68,7 +67,6 @@ const HexGrid: React.FC<HexGridProps> = ({
         }
       });
     });
-
     return adjacentHexes;
   };
 
@@ -95,12 +93,6 @@ const HexGrid: React.FC<HexGridProps> = ({
 
     if (!canBuyGreen && !canBuyRed) return;
 
-    const coinBalance = currentColor === "green" ? greenCoin : redCoin;
-    if (coinBalance < 100) {
-      alert("Not enough coins!");
-      return;
-    }
-
     setPendingHex(key);
   };
 
@@ -118,35 +110,34 @@ const HexGrid: React.FC<HexGridProps> = ({
   };
 
   return (
-    <div style={{ position: "relative" }}>
-      <h3 style={{ textAlign: "center", color: currentColor === "green" ? "#68B671" : "#B6696B" }}>
-        {currentColor === "green" ? "Player 1's Turn (Green)" : "Player 2's Turn (Red)"}
-      </h3>
-      <svg width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)} viewBox="0 0 800 600">
-        {Object.entries(selectedHexes).map(([key, fillColor]) => {
-          const [row, col] = key.match(/\d+/g)!.map(Number);
-          const x = (col - 1) * HEX_WIDTH * 0.75;
-          const y = (row - 1) * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0);
-          return (
-            <g key={key} transform={`translate(${x},${y})`}>
-              <polygon
-                points={`
-                  ${HEX_RADIUS * 0.5},0 
-                  ${HEX_RADIUS * 1.5},0 
-                  ${HEX_RADIUS * 2},${HEX_HEIGHT / 2} 
-                  ${HEX_RADIUS * 1.5},${HEX_HEIGHT} 
-                  ${HEX_RADIUS * 0.5},${HEX_HEIGHT} 
-                  0,${HEX_HEIGHT / 2}
-                `}
-                stroke="rgba(255, 255, 255, 0.5)"
-                strokeWidth="2"
-                fill={fillColor}
-                style={{ cursor: fillColor === "#F4D03F" || fillColor === "#FFA07A" ? "pointer" : "default" }}
-                onClick={() => handleHexClick(row, col)}
-              />
-            </g>
-          );
-        })}
+    <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <svg width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}>
+        {Array.from({ length: ROWS }, (_, row) => (
+          Array.from({ length: COLS }, (_, col) => {
+            const x = (COLS - col - 1) * HEX_WIDTH * 0.75; // ปรับให้แสดงแนวกลับด้าน
+            const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0);
+            const key = `(${row + 1},${COLS - col})`;
+            return (
+              <g key={key} transform={`translate(${x},${y})`}>
+                <polygon
+                  points={`
+                    ${HEX_RADIUS * 0.5},0 
+                    ${HEX_RADIUS * 1.5},0 
+                    ${HEX_RADIUS * 2},${HEX_HEIGHT / 2} 
+                    ${HEX_RADIUS * 1.5},${HEX_HEIGHT} 
+                    ${HEX_RADIUS * 0.5},${HEX_HEIGHT} 
+                    0,${HEX_HEIGHT / 2}
+                  `}
+                  stroke="white"
+                  strokeWidth="2"
+                  fill={selectedHexes[key] || "transparent"}
+                  onClick={() => handleHexClick(row + 1, COLS - col)}
+                  style={{ cursor: "pointer" }}
+                />
+              </g>
+            );
+          })
+        ))}
       </svg>
       {pendingHex && <BuyButton onBuy={handleBuy} />}
     </div>
