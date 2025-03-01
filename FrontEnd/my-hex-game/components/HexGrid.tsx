@@ -114,7 +114,7 @@ const HexGrid: React.FC<HexGridProps> = ({
       <svg width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}>
         {Array.from({ length: ROWS }, (_, row) => (
           Array.from({ length: COLS }, (_, col) => {
-            const x = (COLS - col - 1) * HEX_WIDTH * 0.75; // ปรับให้แสดงแนวกลับด้าน
+            const x = (COLS - col - 1) * HEX_WIDTH * 0.75;
             const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0);
             const key = `(${row + 1},${COLS - col})`;
             return (
@@ -134,6 +134,7 @@ const HexGrid: React.FC<HexGridProps> = ({
                   onClick={() => handleHexClick(row + 1, COLS - col)}
                   style={{ cursor: "pointer" }}
                 />
+                <text x={HEX_RADIUS} y={HEX_HEIGHT / 2} textAnchor="middle" fill="white" fontSize="12" opacity="0.5">{key}</text>
               </g>
             );
           })
