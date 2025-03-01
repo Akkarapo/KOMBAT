@@ -4,24 +4,26 @@ import React from "react";
 
 interface BuyButtonProps {
   onBuy: () => void;
+  position: { x: number; y: number };
 }
 
-const BuyButton: React.FC<BuyButtonProps> = ({ onBuy }) => {
+const BuyButton: React.FC<BuyButtonProps> = ({ onBuy, position }) => {
   return (
-    <button
+    <img
+      src="/BuyHex.png"
+      alt="Buy"
       onClick={onBuy}
       style={{
         position: "absolute",
-        top: "20px",
-        right: "20px",
-        padding: "10px",
-        backgroundColor: "#B6696B",
-        color: "white",
-        borderRadius: "8px"
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        transform: "translate(-50%, -50%)", // ทำให้ปุ่มอยู่ตรงกลาง
+        width: "auto", // ป้องกันการบีบของปุ่ม
+        height: "30px", // กำหนดความสูงที่เหมาะสม
+        cursor: "pointer",
+        objectFit: "contain", // ป้องกันการบีบของภาพ
       }}
-    >
-      <span style={{ marginRight: "5px" }}>BUY</span>
-    </button>
+    />
   );
 };
 

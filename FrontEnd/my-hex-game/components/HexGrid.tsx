@@ -17,8 +17,10 @@ interface HexGridProps {
   locked: boolean;
   setLocked: React.Dispatch<React.SetStateAction<boolean>>;
   currentColor: "green" | "red";
-  initialGreenHexes?: string[];
-  initialRedHexes?: string[];
+  greenHexes: string[];
+  redHexes: string[];
+  setGreenHexes: React.Dispatch<React.SetStateAction<string[]>>;
+  setRedHexes: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const HexGrid: React.FC<HexGridProps> = ({
@@ -29,15 +31,32 @@ const HexGrid: React.FC<HexGridProps> = ({
   locked,
   setLocked,
   currentColor,
-  initialGreenHexes = ["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"],
-  initialRedHexes = ["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"]
+  greenHexes,
+  redHexes,
+  setGreenHexes,
+  setRedHexes,
 }) => {
   const [selectedHexes, setSelectedHexes] = useState<Record<string, string>>({});
   const [pendingHex, setPendingHex] = useState<string | null>(null);
+  const [buyButtonPosition, setBuyButtonPosition] = useState<{ x: number; y: number } | null>(null);
 
-  const calculateAdjacentHexes = (currentHexes: Record<string, string>) => {
-    const adjacentHexes: Record<string, string> = Object.create(null);
-    Object.keys(currentHexes).forEach(hex => {
+  useEffect(() => {
+    const greenMap: Record<string, string> = {};
+    greenHexes.forEach((key) => (greenMap[key] = "#68B671"));
+
+    const redMap: Record<string, string> = {};
+    redHexes.forEach((key) => (redMap[key] = "#B6696B"));
+
+    setSelectedHexes({
+      ...greenMap,
+      ...redMap,
+      ...calculateAdjacentHexes({ ...greenMap, ...redMap }, currentColor),
+    });
+  }, [greenHexes, redHexes, currentColor]);
+
+  const calculateAdjacentHexes = (currentHexes: Record<string, string>, currentColor: "green" | "red") => {
+    const adjacentHexes: Record<string, string> = {};
+    Object.keys(currentHexes).forEach((hex) => {
       const color = currentHexes[hex];
       if (color !== "#68B671" && color !== "#B6696B") return;
 
@@ -47,42 +66,31 @@ const HexGrid: React.FC<HexGridProps> = ({
       const row = parseInt(match[1], 10);
       const col = parseInt(match[2], 10);
       const isGreen = color === "#68B671";
-      const adjacentColor = isGreen ? "#F4D03F" : "#FFA07A";
 
-      const directions = col % 2 === 0
-        ? [[-1, 0], [-1, 1], [0, 1], [1, 0], [0, -1], [-1, -1]] // แถวคู่
-        : [[-1, 0], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]; // แถวคี่
+      if ((currentColor === "green" && isGreen) || (currentColor === "red" && !isGreen)) {
+        const adjacentColor = isGreen ? "#F4D03F" : "#FFA07A";
 
-      directions.forEach(([dr, dc]) => {
-        const adjRow = row + dr;
-        const adjCol = col + dc;
-        const adjKey = `(${adjRow},${adjCol})`;
+        const directions = col % 2 === 0
+          ? [[-1, 0], [-1, 1], [0, 1], [1, 0], [0, -1], [-1, -1]]
+          : [[-1, 0], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]];
 
-        if (
-          adjRow > 0 && adjRow <= ROWS &&
-          adjCol > 0 && adjCol <= COLS &&
-          !(adjKey in currentHexes)
-        ) {
-          adjacentHexes[adjKey] = adjacentColor;
-        }
-      });
+        directions.forEach(([dr, dc]) => {
+          const adjRow = row + dr;
+          const adjCol = col + dc;
+          const adjKey = `(${adjRow},${adjCol})`;
+
+          if (
+            adjRow > 0 && adjRow <= ROWS &&
+            adjCol > 0 && adjCol <= COLS &&
+            !(adjKey in currentHexes)
+          ) {
+            adjacentHexes[adjKey] = adjacentColor;
+          }
+        });
+      }
     });
     return adjacentHexes;
   };
-
-  useEffect(() => {
-    const initialGreen: Record<string, string> = Object.create(null);
-    initialGreenHexes.forEach(key => (initialGreen[key] = "#68B671"));
-
-    const initialRed: Record<string, string> = Object.create(null);
-    initialRedHexes.forEach(key => (initialRed[key] = "#B6696B"));
-
-    setSelectedHexes({
-      ...initialGreen,
-      ...initialRed,
-      ...calculateAdjacentHexes({ ...initialGreen, ...initialRed })
-    });
-  }, []);
 
   const handleHexClick = (row: number, col: number) => {
     const key = `(${row},${col})`;
@@ -94,29 +102,40 @@ const HexGrid: React.FC<HexGridProps> = ({
     if (!canBuyGreen && !canBuyRed) return;
 
     setPendingHex(key);
+
+    const xOffset = -20;
+    const yOffset = 5;
+
+    const x = (col * HEX_WIDTH * 0.75) + xOffset;
+    const y = (row * HEX_HEIGHT) + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0) + yOffset;
+
+    setBuyButtonPosition({ x, y });
   };
 
   const handleBuy = () => {
     if (pendingHex) {
-      setSelectedHexes(prev => {
-        const newColor = currentColor === "green" ? "#68B671" : "#B6696B";
-        const updated = { ...prev, [pendingHex]: newColor };
-        return { ...updated, ...calculateAdjacentHexes(updated) };
-      });
+      if (currentColor === "green") {
+        setGreenHexes((prev) => [...prev, pendingHex]);
+      } else {
+        setRedHexes((prev) => [...prev, pendingHex]);
+      }
+
       deductMoney(100);
       setLocked(true);
       setPendingHex(null);
+      setBuyButtonPosition(null);
     }
   };
 
   return (
     <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
       <svg width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS} height={(ROWS * HEX_HEIGHT) + (HEX_HEIGHT / 2)}>
-        {Array.from({ length: ROWS }, (_, row) => (
+        {Array.from({ length: ROWS }, (_, row) =>
           Array.from({ length: COLS }, (_, col) => {
             const x = (COLS - col - 1) * HEX_WIDTH * 0.75;
             const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0);
             const key = `(${row + 1},${COLS - col})`;
+
             return (
               <g key={key} transform={`translate(${x},${y})`}>
                 <polygon
@@ -134,13 +153,12 @@ const HexGrid: React.FC<HexGridProps> = ({
                   onClick={() => handleHexClick(row + 1, COLS - col)}
                   style={{ cursor: "pointer" }}
                 />
-                <text x={HEX_RADIUS} y={HEX_HEIGHT / 2} textAnchor="middle" fill="white" fontSize="12" opacity="0.5">{key}</text>
               </g>
             );
           })
-        ))}
+        )}
       </svg>
-      {pendingHex && <BuyButton onBuy={handleBuy} />}
+      {pendingHex && buyButtonPosition && <BuyButton onBuy={handleBuy} position={buyButtonPosition} />}
     </div>
   );
 };

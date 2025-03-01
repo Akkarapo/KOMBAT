@@ -30,11 +30,8 @@ const Page = () => {
   const [locked, setLocked] = useState<boolean>(false);
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
-
-  const initialGreenHexes = ["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"];
-  const initialRedHexes = ["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"];
+  const [greenHexes, setGreenHexes] = useState<string[]>(["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"]);
+  const [redHexes, setRedHexes] = useState<string[]>(["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"]);
 
   const deductGreenCoin = (amount: number): void => {
     setGreenCoin((prev) => Math.max(0, prev - amount));
@@ -52,9 +49,10 @@ const Page = () => {
       setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
     }
   };
-
+  const [showPopup, setShowPopup] = useState<boolean>(false);
   const openPopup = () => setShowPopup(true);
   const closePopup = () => setShowPopup(false);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const selectCard = (card: string) => {
     setSelectedCard(card);
     closePopup();
@@ -111,8 +109,10 @@ const Page = () => {
             locked={locked}
             setLocked={setLocked}
             currentColor={currentTurn}
-            initialGreenHexes={initialGreenHexes}
-            initialRedHexes={initialRedHexes}
+            greenHexes={greenHexes}
+            redHexes={redHexes}
+            setGreenHexes={setGreenHexes}
+            setRedHexes={setRedHexes}
           />
         </div>
 
