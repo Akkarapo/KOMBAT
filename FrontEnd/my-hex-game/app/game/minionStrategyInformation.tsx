@@ -88,7 +88,7 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
             <div
               style={{
                 position: "absolute",
-                top: "8px",
+                top: "6px",
                 left: "60px",
                 color: "#D3FFDC",
                 fontSize: "18px",
@@ -100,7 +100,7 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
             <div
               style={{
                 position: "absolute",
-                top: "38px",
+                top: "34px",
                 left: "60px",
                 color: "#D3FFDC",
                 fontSize: "18px",
@@ -112,7 +112,7 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
             <div
               style={{
                 position: "absolute",
-                top: "68px",
+                top: "60px",
                 left: "60px",
                 color: "#D3FFDC",
                 fontSize: "18px",
