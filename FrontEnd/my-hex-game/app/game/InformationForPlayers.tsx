@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { HexData, imageMapping } from "./HexData";
-import MinionStrategyInformation from "./minionStrategyInformation";
 
 interface InformationForPlayersProps {
   isOpen: boolean;
   onClose: () => void;
+  onMinionCardClick?: (id: number) => void;
 }
 
 interface MinionData {
@@ -19,6 +18,7 @@ interface MinionData {
   strategy: string;
 }
 
+// รูปการ์ดมินเนี่ยน
 const minionImages: Record<number, string> = {
   1: "/CardMinion1.png",
   2: "/CardMinion2.png",
@@ -27,27 +27,22 @@ const minionImages: Record<number, string> = {
   5: "/CardMinion5.png",
 };
 
+// ไอคอน Strategy
 const strategyIcons: Record<string, string> = {
   "Strategy 1": "/Strategy1Icon.png",
   "Strategy 2": "/Strategy2Icon.png",
   "Strategy 3": "/Strategy3Icon.png",
 };
 
-const InformationForPlayers: React.FC<InformationForPlayersProps> = ({ isOpen, onClose }) => {
+const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
+  isOpen,
+  onClose,
+  onMinionCardClick,
+}) => {
   const searchParams = useSearchParams();
 
-  const [config, setConfig] = useState<{ [key: string]: string }>({});
+  const [config, setConfig] = useState<Record<string, string>>({});
   const [minions, setMinions] = useState<MinionData[]>([]);
-  const [selectedMinionId, setSelectedMinionId] = useState<number | null>(null);
-  const [folded, setFolded] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) {
-      // reset state
-      setFolded(false);
-      setSelectedMinionId(null);
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,7 +50,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({ isOpen, o
       const localConfig = localStorage.getItem("hexConfig");
       let parsedConfig = localConfig ? JSON.parse(localConfig) : {};
 
-      // Override ด้วย query
+      // Override ค่าจาก query
       Object.keys(HexData).forEach((key) => {
         const paramValue = searchParams.get(key);
         if (paramValue) {
@@ -81,246 +76,272 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({ isOpen, o
     }
   }, [isOpen, searchParams]);
 
-  const keys = Object.keys(HexData);
-  const leftFields = keys.slice(0, 5);
-  const rightFields = keys.slice(5);
-
-  if (!isOpen) return null;
-
-  // คลิกการ์ด => พับ
-  const handleCardClick = (id: number) => {
-    setSelectedMinionId(id);
-    setFolded(true);
-  };
-
-  // ปิด minionStrategy => กลับมา InfoForPlayers
-  const handleMinionStrategyClose = () => {
-    setFolded(false);
-    setSelectedMinionId(null);
-  };
+  type HexDataKeys = keyof typeof HexData;
+  const allKeys = Object.keys(HexData) as HexDataKeys[];
+  const half = Math.ceil(allKeys.length / 2);
+  const leftKeys = allKeys.slice(0, half);
+  const rightKeys = allKeys.slice(half);
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 flex items-center justify-center z-50"
-        // ใช้ overlay เป็นสีดำโปร่งใส
-        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
+      {isOpen && (
         <motion.div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "8px",
-            width: "80%",
-            maxWidth: "1000px",
-            padding: "10px",
-            position: "relative",
-          }}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
         >
-          {/* ปุ่มปิด (X) */}
-          <button
-            onClick={onClose}
+          <motion.div
             style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              color: "#555",
+              borderRadius: "8px",
+              width: "80%",
+              maxWidth: "1000px",
+              padding: "20px",
+              position: "relative",
             }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
           >
-            X
-          </button>
-
-          {/* ถ้ายังไม่ fold => แสดง InfoForPlayers */}
-          {!folded && (
-            <>
-              <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "10px" }}>
-                Game Configuration
-              </h2>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  columnGap: "2px",
-                  rowGap: "2px",
-                  width: "100%",
-                }}
-              >
-                {[leftFields, rightFields].map((fields, colIndex) => (
-                  <div key={colIndex} style={{ display: "flex", flexDirection: "column" }}>
-                    {fields.map((key, index) => {
-                      const value = config[key] || "";
-                      const imgSrc = imageMapping[key] || "/default.png";
-                      return (
-                        <motion.div
-                          key={key}
-                          style={{
-                            position: "relative",
-                            minHeight: "50px",
-                            marginBottom: "2px",
-                          }}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: (colIndex * 5 + index) * 0.05 }}
-                        >
-                          <Image
-                            src={imgSrc}
-                            alt={key}
-                            width={200}
-                            height={50}
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "contain",
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: "relative",
-                              top: "20px",
-                              left: "70px",
-                              fontSize: "14px",
-                              color: "black",
-                            }}
-                          >
-                            {value}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-
-              <h2 style={{ fontSize: "20px", fontWeight: "bold", marginTop: "10px", marginBottom: "10px" }}>
-                Minion Information
-              </h2>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  overflowX: "auto",
-                  gap: "20px",
-                }}
-              >
-                {minions.map((minion) => {
-                  const cardImage = minionImages[minion.id] || "/defaultCard.png";
-                  const iconPath = strategyIcons[minion.strategy] || null;
-                  const spawnCost = config.spawn_cost || "0";
-                  const initHp = config.init_hp || "0";
+            <h2
+              style={{
+                fontSize: "18px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+                textAlign: "left",
+              }}
+            >
+              Game Configuration
+            </h2>
+            <div
+              style={{
+                marginLeft: "auto",
+                marginRight: "auto",
+                marginTop: 0,
+                marginBottom: "20px",
+                maxWidth: "800px",
+                display: "flex",
+                gap: "20px",
+              }}
+            >
+              {/* คอลัมน์ซ้าย */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+                {leftKeys.map((cfgKey) => {
+                  const value = config[cfgKey] || "N/A";
+                  const iconPath = imageMapping[cfgKey] || "";
 
                   return (
                     <div
-                      key={minion.id}
+                      key={cfgKey}
                       style={{
-                        flex: "0 0 auto",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
+                        position: "relative",
+                        width: "400px",
+                        height: "50px",
                       }}
                     >
-                      <span style={{ color: "black", fontWeight: "bold", fontSize: "16px", marginBottom: "4px" }}>
-                        {minion.name}
-                      </span>
+                      <img
+                        src={iconPath}
+                        alt={cfgKey}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
                       <div
                         style={{
-                          width: "180px",
-                          height: "240px",
-                          position: "relative",
-                          backgroundColor: "transparent",
-                          borderRadius: "8px",
-                          cursor: "pointer",
+                          position: "absolute",
+                          top: "20px",
+                          left: "70px",
+                          color: "black",
+                          fontSize: "14px",
+                          fontWeight: "normal",
                         }}
-                        onClick={() => handleCardClick(minion.id)}
                       >
-                        <img
-                          src={cardImage}
-                          alt={minion.name}
-                          style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px" }}
-                        />
-
-                        {/* spawn_cost */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "5px",
-                            left: "55px",
-                            color: "#D3FFDC",
-                            fontSize: "18px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {spawnCost}
-                        </div>
-                        {/* defense */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "30px",
-                            left: "55px",
-                            color: "#D3FFDC",
-                            fontSize: "18px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {minion.defense}
-                        </div>
-                        {/* init_hp */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "55px",
-                            left: "55px",
-                            color: "#D3FFDC",
-                            fontSize: "18px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {initHp}
-                        </div>
-
-                        {/* strategy icon */}
-                        {iconPath && (
-                          <img
-                            src={iconPath}
-                            alt={minion.strategy}
-                            style={{
-                              position: "absolute",
-                              top: "15px",
-                              right: "30px",
-                              width: "40px",
-                              height: "40px",
-                              opacity: 0.2,
-                            }}
-                          />
-                        )}
+                        {value}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </>
-          )}
 
-          {/* ถ้า folded = true => แสดง minionStrategyInformation */}
-          {folded && selectedMinionId !== null && (
-            <MinionStrategyInformation
-              minionId={selectedMinionId}
-              hideBuyButton={true}
-              onClose={handleMinionStrategyClose} // ปิด => กลับมา InfoForPlayers
-            />
-          )}
+              {/* คอลัมน์ขวา */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+                {rightKeys.map((cfgKey) => {
+                  const value = config[cfgKey] || "N/A";
+                  const iconPath = imageMapping[cfgKey] || "";
+
+                  return (
+                    <div
+                      key={cfgKey}
+                      style={{
+                        position: "relative",
+                        width: "400px",
+                        height: "50px",
+                      }}
+                    >
+                      <img
+                        src={iconPath}
+                        alt={cfgKey}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "20px",
+                          left: "70px",
+                          color: "black",
+                          fontSize: "14px",
+                          fontWeight: "normal",
+                        }}
+                      >
+                        {value}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <h2
+              style={{
+                fontSize: "18px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+                textAlign: "left",
+              }}
+            >
+              Minion Information
+            </h2>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: "10px",
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
+            >
+              {minions.map((minion) => {
+                const cardImage = minionImages[minion.id] || "/defaultCard.png";
+                const iconPath = strategyIcons[minion.strategy] || null;
+                const spawnCost = config.spawn_cost || "0";
+                const initHp = config.init_hp || "0";
+
+                return (
+                  <div
+                    key={minion.id}
+                    style={{
+                      width: "180px",
+                      height: "240px",
+                      position: "relative",
+                      backgroundColor: "transparent",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                    onClick={() => onMinionCardClick?.(minion.id)}
+                  >
+                    <span
+                      style={{
+                        color: "black",
+                        fontWeight: "bold",
+                        fontSize: "16px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {minion.name}
+                    </span>
+
+                    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+                      <img
+                        src={cardImage}
+                        alt={minion.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      {/* spawn_cost */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "5px",
+                          left: "55px",
+                          color: "#D3FFDC",
+                          fontSize: "18px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {spawnCost}
+                      </div>
+                      {/* defense */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "30px",
+                          left: "55px",
+                          color: "#D3FFDC",
+                          fontSize: "18px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {minion.defense}
+                      </div>
+                      {/* init_hp */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "55px",
+                          left: "55px",
+                          color: "#D3FFDC",
+                          fontSize: "18px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {initHp}
+                      </div>
+
+                      {/* ไอคอน Strategy ถ้ามี */}
+                      {iconPath && (
+                        <img
+                          src={iconPath}
+                          alt={minion.strategy}
+                          style={{
+                            position: "absolute",
+                            top: "15px",
+                            right: "30px",
+                            width: "40px",
+                            height: "40px",
+                            opacity: 0.2,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 };

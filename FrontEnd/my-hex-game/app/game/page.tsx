@@ -9,10 +9,12 @@ import { useUserStrategy, UserStrategyProvider } from "../choose-strategy/userSt
 
 // Import Popup สำหรับแสดงข้อมูล
 import InformationForPlayers from "./InformationForPlayers";
+import MinionStrategyInformation from "./minionStrategyInformation";
 
 const Page = () => {
   const searchParams = useSearchParams();
   const { minions } = useUserStrategy();
+
   const [mode, setMode] = useState<string>("Loading...");
   const [minionCount, setMinionCount] = useState<number>(0);
 
@@ -25,9 +27,11 @@ const Page = () => {
     setMinionCount(count);
   }, [searchParams]);
 
-  const minionNames = minions.map((minion) => minion.name);
+  const minionNames = minions.map((m) => m.name);
 
-  // state สำหรับ coin, turn, และเงื่อนไขต่าง ๆ
+  // -------------------------------
+  // State สำหรับระบบเกมทั่วไป
+  // -------------------------------
   const [greenCoin, setGreenCoin] = useState<number>(2000);
   const [redCoin, setRedCoin] = useState<number>(2000);
   const [remainingTurns, setRemainingTurns] = useState<number>(100);
@@ -35,11 +39,13 @@ const Page = () => {
   const [locked, setLocked] = useState<boolean>(false);
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
-  // พื้นที่เริ่มต้นของแต่ละฝั่ง
-  const [greenHexes, setGreenHexes] = useState<string[]>(["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"]);
-  const [redHexes, setRedHexes] = useState<string[]>(["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"]);
+  const [greenHexes, setGreenHexes] = useState<string[]>([
+    "(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"
+  ]);
+  const [redHexes, setRedHexes] = useState<string[]>([
+    "(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"
+  ]);
 
-  // ฟังก์ชันหัก coin
   const deductGreenCoin = (amount: number): void => {
     setGreenCoin((prev) => Math.max(0, prev - amount));
   };
@@ -47,7 +53,7 @@ const Page = () => {
     setRedCoin((prev) => Math.max(0, prev - amount));
   };
 
-  // ฟังก์ชันกดปุ่มเปลี่ยนเทิร์น (SandTime)
+  // ฟังก์ชันเปลี่ยนเทิร์น (กด SandTime)
   const handleAction = () => {
     if (remainingTurns > 0 && canAct) {
       setRemainingTurns((prev) => prev - 1);
@@ -57,20 +63,48 @@ const Page = () => {
     }
   };
 
-  // ฟังก์ชันเปิด/ปิดป๊อบอัพ MinionsCard
+  // -------------------------------
+  // Popup MinionsCard
+  // -------------------------------
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const openPopup = () => setShowPopup(true);
   const closePopup = () => setShowPopup(false);
 
-  // หากเลือกการ์ดใดใน MinionsCard
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const selectCard = (card: string) => {
     setSelectedCard(card);
     closePopup();
   };
 
-  // state สำหรับเปิด/ปิด Popup InformationForPlayers
+  // -------------------------------
+  // Popup InformationForPlayers
+  // -------------------------------
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+
+  // -------------------------------
+  // Popup MinionStrategyInformation
+  // -------------------------------
+  const [showStrategyPopup, setShowStrategyPopup] = useState(false);
+  const [strategyMinionId, setStrategyMinionId] = useState<number | null>(null);
+
+  // ฟังก์ชันเปิด popup Strategy (เมื่อคลิกมินเนี่ยนใน Info)
+  const openStrategy = (id: number) => {
+    // ปิด Info ก่อน
+    setShowInfoPopup(false);
+
+    // เก็บ ID
+    setStrategyMinionId(id);
+    setShowStrategyPopup(true);
+  };
+
+  // ฟังก์ชันปิด popup Strategy
+  const closeStrategy = () => {
+    setShowStrategyPopup(false);
+    setStrategyMinionId(null);
+
+    // กลับมาเปิด Info ต่อ
+    setShowInfoPopup(true);
+  };
 
   return (
     <UserStrategyProvider>
@@ -84,7 +118,7 @@ const Page = () => {
           Show Info
         </button>
 
-        {/* Player 2 Info (ด้านบนซ้าย) */}
+        {/* Player 2 Info (บนซ้าย) */}
         <motion.div
           className="absolute w-[250px] h-[90px]"
           style={{
@@ -103,7 +137,7 @@ const Page = () => {
           </motion.span>
         </motion.div>
 
-        {/* Player 1 Info (ด้านล่างขวา) */}
+        {/* Player 1 Info (ล่างขวา) */}
         <motion.div
           className="absolute w-[250px] h-[90px]"
           style={{
@@ -140,7 +174,7 @@ const Page = () => {
           />
         </div>
 
-        {/* Turns Counter + ปุ่มเปลี่ยนเทิร์น (SandTime) */}
+        {/* Turns Counter + ปุ่มเปลี่ยนเทิร์น */}
         <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
           <div className="text-4xl font-bold text-black">{remainingTurns}</div>
           <button onClick={handleAction} disabled={remainingTurns <= 0}>
@@ -171,11 +205,21 @@ const Page = () => {
           minionNames={minionNames}
         />
 
-        {/* Popup InformationForPlayers (กดปุ่ม Show Info เพื่อเปิด) */}
+        {/* Popup InformationForPlayers */}
         <InformationForPlayers
           isOpen={showInfoPopup}
           onClose={() => setShowInfoPopup(false)}
+          onMinionCardClick={openStrategy}
         />
+
+        {/* Popup MinionStrategyInformation (ไม่มีปุ่ม BUY) */}
+        {showStrategyPopup && strategyMinionId !== null && (
+          <MinionStrategyInformation
+            minionId={strategyMinionId}
+            hideBuyButton={true}
+            onClose={closeStrategy}
+          />
+        )}
 
         {/* Back to Menu Button */}
         <button
