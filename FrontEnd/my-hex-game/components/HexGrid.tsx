@@ -10,6 +10,8 @@ const HEX_WIDTH = 2 * HEX_RADIUS;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_RADIUS;
 
 interface HexGridProps {
+  /** จำนวนเงินที่ต้องใช้ในการซื้อพื้นที่ (ดึงมาจริง ๆ จาก config) */
+  hexPurchaseCost: number;
   deductMoney: (amount: number) => void;
   greenCoin: number;
   redCoin: number;
@@ -25,6 +27,7 @@ interface HexGridProps {
 }
 
 const HexGrid: React.FC<HexGridProps> = ({
+  hexPurchaseCost,
   deductMoney,
   greenCoin,
   redCoin,
@@ -129,19 +132,19 @@ const HexGrid: React.FC<HexGridProps> = ({
   // ฟังก์ชันเรียกเมื่อคลิก hex
   const handleHexClick = (row: number, col: number) => {
     const key = `(${row},${col})`;
-    // ถ้าเทิร์นยังไม่พร้อม หรือ hex ไม่มีสี (selectedHexes[key] ไม่มี) → return
+    // ถ้าเทิร์นยังไม่พร้อม หรือ hex ไม่มีสี → return
     if (!canAct || locked || !(key in selectedHexes)) return;
 
     const colorClicked = selectedHexes[key];
 
     // ฝั่งเขียว
     if (currentColor === "green") {
-      // ถ้าคลิกพื้นที่สีเขียว (#68B671) → เปิดป๊อบอัพ
+      // ถ้าคลิกพื้นที่สีเขียว (#68B671) → เปิดป๊อบอัพ MinionsCard
       if (colorClicked === "#68B671") {
         openMinionsCard();
         return;
       }
-      // ถ้าคลิกสีเหลือง (#F4D03F) → แสดงปุ่ม BUY (toggle ได้)
+      // ถ้าคลิกสีเหลือง (#F4D03F) → แสดงปุ่ม BUY
       if (colorClicked === "#F4D03F") {
         showOrToggleBuyButton(key);
         return;
@@ -155,7 +158,7 @@ const HexGrid: React.FC<HexGridProps> = ({
         openMinionsCard();
         return;
       }
-      // ถ้าคลิกสีแดงอ่อน (#FFA07A) → แสดงปุ่ม BUY (toggle ได้)
+      // ถ้าคลิกสีแดงอ่อน (#FFA07A) → แสดงปุ่ม BUY
       if (colorClicked === "#FFA07A") {
         showOrToggleBuyButton(key);
         return;
@@ -185,8 +188,8 @@ const HexGrid: React.FC<HexGridProps> = ({
     const yOffset = 5;
 
     // คำนวณตำแหน่งปุ่ม
-    const x = (col * HEX_WIDTH * 0.75) + xOffset;
-    const y = (row * HEX_HEIGHT) + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0) + yOffset;
+    const x = col * HEX_WIDTH * 0.75 + xOffset;
+    const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0) + yOffset;
 
     setBuyButtonPosition({ x, y });
   };
@@ -202,8 +205,8 @@ const HexGrid: React.FC<HexGridProps> = ({
       setRedHexes((prev) => [...prev, pendingHex]);
     }
 
-    // หัก coin 100
-    deductMoney(100);
+    // หัก coin ตามค่าที่ส่งมาจริง ๆ
+    deductMoney(hexPurchaseCost);
 
     // ล็อกไม่ให้เทิร์นเดียวกันซื้อซ้ำ
     setLocked(true);
@@ -224,8 +227,8 @@ const HexGrid: React.FC<HexGridProps> = ({
       }}
     >
       <svg
-        width={(COLS * HEX_WIDTH * 0.75) + HEX_RADIUS}
-        height={(ROWS * HEX_HEIGHT) + HEX_HEIGHT / 2}
+        width={COLS * HEX_WIDTH * 0.75 + HEX_RADIUS}
+        height={ROWS * HEX_HEIGHT + HEX_HEIGHT / 2}
       >
         {Array.from({ length: ROWS }, (_, row) =>
           Array.from({ length: COLS }, (_, col) => {
