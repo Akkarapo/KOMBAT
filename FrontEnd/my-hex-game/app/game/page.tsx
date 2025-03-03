@@ -7,12 +7,16 @@ import HexGrid from "../../components/HexGrid";
 import MinionsCard from "./minionsCard";
 import { useUserStrategy, UserStrategyProvider } from "../choose-strategy/userStrategyData";
 
+// Import Popup สำหรับแสดงข้อมูล
+import InformationForPlayers from "./InformationForPlayers";
+
 const Page = () => {
   const searchParams = useSearchParams();
   const { minions } = useUserStrategy();
   const [mode, setMode] = useState<string>("Loading...");
   const [minionCount, setMinionCount] = useState<number>(0);
 
+  // โหลดค่าจาก URL
   useEffect(() => {
     const gameMode = searchParams.get("mode") || "Default";
     setMode(gameMode);
@@ -23,6 +27,7 @@ const Page = () => {
 
   const minionNames = minions.map((minion) => minion.name);
 
+  // state สำหรับ coin, turn, และเงื่อนไขต่าง ๆ
   const [greenCoin, setGreenCoin] = useState<number>(2000);
   const [redCoin, setRedCoin] = useState<number>(2000);
   const [remainingTurns, setRemainingTurns] = useState<number>(100);
@@ -30,17 +35,19 @@ const Page = () => {
   const [locked, setLocked] = useState<boolean>(false);
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
+  // พื้นที่เริ่มต้นของแต่ละฝั่ง
   const [greenHexes, setGreenHexes] = useState<string[]>(["(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)"]);
   const [redHexes, setRedHexes] = useState<string[]>(["(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)"]);
 
+  // ฟังก์ชันหัก coin
   const deductGreenCoin = (amount: number): void => {
     setGreenCoin((prev) => Math.max(0, prev - amount));
   };
-
   const deductRedCoin = (amount: number): void => {
     setRedCoin((prev) => Math.max(0, prev - amount));
   };
 
+  // ฟังก์ชันกดปุ่มเปลี่ยนเทิร์น (SandTime)
   const handleAction = () => {
     if (remainingTurns > 0 && canAct) {
       setRemainingTurns((prev) => prev - 1);
@@ -49,19 +56,35 @@ const Page = () => {
       setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
     }
   };
+
+  // ฟังก์ชันเปิด/ปิดป๊อบอัพ MinionsCard
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const openPopup = () => setShowPopup(true);
   const closePopup = () => setShowPopup(false);
+
+  // หากเลือกการ์ดใดใน MinionsCard
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const selectCard = (card: string) => {
     setSelectedCard(card);
     closePopup();
   };
 
+  // state สำหรับเปิด/ปิด Popup InformationForPlayers
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+
   return (
     <UserStrategyProvider>
       <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
-        {/* Player 2 Info */}
+        
+        {/* ปุ่ม Show Info มุมขวาบน */}
+        <button
+          className="absolute top-10 right-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition"
+          onClick={() => setShowInfoPopup(true)}
+        >
+          Show Info
+        </button>
+
+        {/* Player 2 Info (ด้านบนซ้าย) */}
         <motion.div
           className="absolute w-[250px] h-[90px]"
           style={{
@@ -80,7 +103,7 @@ const Page = () => {
           </motion.span>
         </motion.div>
 
-        {/* Player 1 Info */}
+        {/* Player 1 Info (ด้านล่างขวา) */}
         <motion.div
           className="absolute w-[250px] h-[90px]"
           style={{
@@ -99,7 +122,7 @@ const Page = () => {
           </motion.span>
         </motion.div>
 
-        {/* HexGrid */}
+        {/* HexGrid ตรงกลาง */}
         <div className="relative w-[800px] h-[800px] flex items-center justify-center">
           <HexGrid
             deductMoney={currentTurn === "green" ? deductGreenCoin : deductRedCoin}
@@ -113,10 +136,11 @@ const Page = () => {
             redHexes={redHexes}
             setGreenHexes={setGreenHexes}
             setRedHexes={setRedHexes}
+            openMinionsCard={openPopup}
           />
         </div>
 
-        {/* Turns Counter */}
+        {/* Turns Counter + ปุ่มเปลี่ยนเทิร์น (SandTime) */}
         <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
           <div className="text-4xl font-bold text-black">{remainingTurns}</div>
           <button onClick={handleAction} disabled={remainingTurns <= 0}>
@@ -138,21 +162,19 @@ const Page = () => {
           <img src="/Coin2.png" alt="Coin" className="w-[50px] h-[50px]" />
         </div>
 
-        {/* ปุ่มเลือกการ์ด */}
-        <button
-          className="absolute top-10 right-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition"
-          onClick={openPopup}
-        >
-          Choose Minion
-        </button>
-
-        {/* Minions Card Popup */}
+        {/* Popup MinionsCard */}
         <MinionsCard
           isOpen={showPopup}
           onClose={closePopup}
           onSelect={selectCard}
           minionCount={minionCount}
           minionNames={minionNames}
+        />
+
+        {/* Popup InformationForPlayers (กดปุ่ม Show Info เพื่อเปิด) */}
+        <InformationForPlayers
+          isOpen={showInfoPopup}
+          onClose={() => setShowInfoPopup(false)}
         />
 
         {/* Back to Menu Button */}
