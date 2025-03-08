@@ -10,4 +10,4 @@ const imageMapping: { [key: string]: string } = {
     max_spawns: "/MaxSpawns.png",
 };
 
-export default imageMapping;
+export default imageMapping; 

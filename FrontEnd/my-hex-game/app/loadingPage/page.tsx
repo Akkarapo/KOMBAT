@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// หากไม่ต้องการไล่สีพื้นหลัง ให้ลบฟังก์ชันนี้ + โค้ด fraction/currentBgColor ออก
+// ฟังก์ชันไล่สีพื้นหลัง (Phase 1)
 function interpolateColor(start: string, end: string, fraction: number) {
   const parseHex = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -12,7 +12,6 @@ function interpolateColor(start: string, end: string, fraction: number) {
     const b = parseInt(hex.slice(5, 7), 16);
     return [r, g, b];
   };
-
   const [r1, g1, b1] = parseHex(start);
   const [r2, g2, b2] = parseHex(end);
 
@@ -23,20 +22,24 @@ function interpolateColor(start: string, end: string, fraction: number) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-type Phase = 1 | 2;
-// สถานะมินเนี่ยน: 0=ซ่อน, 1=สีขาว, 2=สี
-type MinionState = 0 | 1 | 2;
+// ประกาศ 3 Phase: 1, 2, 3
+type Phase = 1 | 2 | 3;
+type MinionState = 0 | 1 | 2; // 0=ซ่อน, 1=สีขาว, 2=สี
 
 const LoadingPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ประกาศ Phase (1=5วิ, 2=3วิ)
+  // -----------------------------
+  // State: phase, countdown, fadeCountdown
+  // -----------------------------
   const [phase, setPhase] = useState<Phase>(1);
-  // countdown ของ Phase ปัจจุบัน
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(5);      // สำหรับ Phase 1,2
+  const [fadeCountdown, setFadeCountdown] = useState(2); // สำหรับ Phase 3
 
-  // ไฟล์รูปสีขาว
+  // -----------------------------
+  // มินเนี่ยน
+  // -----------------------------
   const whiteModels = [
     "/Model01White.png",
     "/Model02White.png",
@@ -44,7 +47,6 @@ const LoadingPage = () => {
     "/Model04White.png",
     "/Model05White.png",
   ];
-  // ไฟล์รูปสี
   const colorModels = [
     "/Model01.png",
     "/Model02.png",
@@ -52,31 +54,27 @@ const LoadingPage = () => {
     "/Model04.png",
     "/Model05.png",
   ];
-
-  // สถานะของมินเนี่ยนทั้ง 5 ตัว (0=ซ่อน, 1=สีขาว, 2=สี)
   const [minionStates, setMinionStates] = useState<MinionState[]>([0, 0, 0, 0, 0]);
 
-  // ฟังก์ชันเปิดตัวมินเนี่ยน (index)
+  // เปิดตัวมินเนี่ยนทีละตัว
   const revealMinion = (index: number) => {
-    // 1) เป็นสีขาว (state=1) → fade in 0.5 วิ
     setMinionStates((prev) => {
       const newArr = [...prev];
-      newArr[index] = 1;
+      newArr[index] = 1; // สีขาว
       return newArr;
     });
-    // 2) หลัง 0.5 วิ → เปลี่ยนเป็นสี (2)
     setTimeout(() => {
       setMinionStates((prev) => {
         const newArr = [...prev];
-        newArr[index] = 2;
+        newArr[index] = 2; // สี
         return newArr;
       });
     }, 500);
   };
 
-  // ------------------------------
+  // -----------------------------
   // Phase 1: 5 วินาที
-  // ------------------------------
+  // -----------------------------
   useEffect(() => {
     if (phase === 1) {
       const timer = setInterval(() => {
@@ -86,7 +84,7 @@ const LoadingPage = () => {
     }
   }, [phase]);
 
-  // ทุกครั้งที่ countdown เปลี่ยน => เปิดตัวมินเนี่ยน
+  // เปิดตัวมินเนี่ยน
   useEffect(() => {
     if (phase === 1) {
       switch (countdown) {
@@ -104,7 +102,6 @@ const LoadingPage = () => {
           break;
         case 0:
           revealMinion(4);
-          // ยังอยู่ใน Phase 1, เดี๋ยวค่อยสลับไป Phase 2 ด้านล่าง
           break;
         default:
           break;
@@ -112,7 +109,7 @@ const LoadingPage = () => {
     }
   }, [phase, countdown]);
 
-  // เมื่อ Phase 1 นับถอยหลังหมด → ไป Phase 2
+  // หมด Phase 1 => Phase 2
   useEffect(() => {
     if (phase === 1 && countdown <= 0) {
       setPhase(2);
@@ -120,9 +117,9 @@ const LoadingPage = () => {
     }
   }, [phase, countdown]);
 
-  // ------------------------------
+  // -----------------------------
   // Phase 2: 3 วินาที
-  // ------------------------------
+  // -----------------------------
   useEffect(() => {
     if (phase === 2) {
       const timer = setInterval(() => {
@@ -132,34 +129,59 @@ const LoadingPage = () => {
     }
   }, [phase]);
 
-  // ครบ 3 วิใน Phase 2 => ไปหน้า /game
+  // หมด Phase 2 => Phase 3
   useEffect(() => {
     if (phase === 2 && countdown <= 0) {
+      setPhase(3);
+      setFadeCountdown(2); // ตัวอย่าง 2 วิ
+    }
+  }, [phase, countdown]);
+
+  // -----------------------------
+  // Phase 3: crossfade -> background.png
+  // พร้อม fade out ตัวละคร+ข้อความ
+  // -----------------------------
+  useEffect(() => {
+    if (phase === 3) {
+      const timer = setInterval(() => {
+        setFadeCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [phase]);
+
+  // เมื่อ fadeCountdown หมด => ไป /game
+  useEffect(() => {
+    if (phase === 3 && fadeCountdown <= 0) {
       router.push(`/game?${searchParams.toString()}`);
     }
-  }, [phase, countdown, router, searchParams]);
+  }, [phase, fadeCountdown, router, searchParams]);
 
-  // ------------------------------
-  // ไล่สีพื้นหลัง (เฉพาะ 5 วิแรก)
-  // ------------------------------
-  const startColor = "#44499A";
-  const endColor = "#466D50";
-  const fraction = phase === 1 ? Math.min(1, Math.max(0, (5 - countdown) / 5)) : 1;
-  const currentBgColor = interpolateColor(startColor, endColor, fraction);
+  // -----------------------------
+  // ไล่สีพื้นหลัง Phase 1
+  // -----------------------------
+  const startColor = "#A482E1";
+  const endColor = "#C0CDA1";
+  let fraction = 1;
+  if (phase === 1) {
+    fraction = Math.min(1, Math.max(0, (5 - countdown) / 5));
+  } else if (phase === 2) {
+    fraction = 1;
+  } else {
+    fraction = 1; // phase=3 => 1
+  }
+  const colorBg = interpolateColor(startColor, endColor, fraction);
 
-  // ------------------------------
+  // -----------------------------
   // ข้อความ
-  // ------------------------------
+  // -----------------------------
   const titleText = phase === 1 ? "Loading" : "Game Start";
   const subtitleText =
     phase === 1
       ? `Redirecting to game in ${Math.max(countdown, 0)} seconds`
       : "Winning isn’t everything, but wanting to win is";
 
-  // ------------------------------
-  // ตำแหน่ง x ของแต่ละตัว (absolute)
-  // ------------------------------
-  // ปรับตามต้องการ เช่น ให้ตัวแรก left=0, ตัวสอง left=120, ...
+  // ตำแหน่งมินเนี่ยน
   const positions = [0, 120, 240, 360, 480];
 
   // ปุ่ม Back
@@ -167,82 +189,133 @@ const LoadingPage = () => {
     router.push(`/configurationPage?${searchParams.toString()}`);
   };
 
+  // -----------------------------
+  // Rendering
+  // -----------------------------
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        backgroundColor: currentBgColor,
-        transition: "background-color 0.5s linear",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-      }}
-    >
-      {/* Container หลักสำหรับตัวละคร (position: relative) */}
-      <div
-        style={{
-          flex: 1,
-          position: "relative",
-          marginTop: "250px", // ขยับลงล่าง
-          // กำหนดความกว้าง container = 600px แล้ว margin auto เพื่อให้อยู่กลางหน้าจอ
-          width: "600px",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
-      >
-        {/* วาดมินเนี่ยนแต่ละตัวด้วย absolute */}
-        {minionStates.map((state, i) => {
-          let src = "";
-          if (state === 1) {
-            src = whiteModels[i]; // สีขาว
-          } else if (state === 2) {
-            src = colorModels[i]; // สี
-          }
-          const isVisible = state !== 0; // ถ้า 0 => ยังไม่โชว์
+    <div style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden" }}>
+      {/* พื้นหลังสี (Phase 1/2) */}
+      <AnimatePresence>
+        {(phase === 1 || phase === 2) && (
+          <motion.div
+            key="colorBg"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: colorBg,
+            }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} // crossfade out
+            transition={{ duration: 1 }}
+          />
+        )}
+      </AnimatePresence>
 
-          return (
-            <motion.img
-              key={i}
-              src={src}
-              alt={`Minion ${i}`}
+      {/* พื้นหลังรูป (Phase 3) */}
+      <AnimatePresence>
+        {phase === 3 && (
+          <motion.div
+            key="bgImage"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: "url('/background.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* เนื้อหา */}
+      <div style={{ position: "relative", width: "100%", height: "100%", zIndex: 1 }}>
+        {/* ★ Fade out มินเนี่ยน+ข้อความ ใน Phase 3 => unmount (AnimatePresence) */}
+        <AnimatePresence>
+          {phase < 3 && (
+            <motion.div
+              key="minionsAndText"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }} // ตอน Phase=3 => จะ unmount => fade out
+              transition={{ duration: 1 }}
               style={{
+                width: "100%",
+                height: "100%",
                 position: "absolute",
-                left: `${positions[i]}px`,
-                top: "0px",
-                height: "150px",
-                width: "auto",
+                top: 0,
+                left: 0,
               }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVisible ? 1 : 0 }}
-              transition={{ duration: 0.5 }}
-            />
-          );
-        })}
-      </div>
+            >
+              {/* Container มินเนี่ยน */}
+              <div
+                style={{
+                  marginTop: "250px",
+                  position: "relative",
+                  width: "600px",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  height: "200px",
+                }}
+              >
+                {minionStates.map((state, i) => {
+                  if (state === 0) return null;
+                  const src = state === 1 ? whiteModels[i] : colorModels[i];
+                  return (
+                    <motion.img
+                      key={i}
+                      src={src}
+                      alt={`Minion ${i}`}
+                      style={{
+                        position: "absolute",
+                        left: `${positions[i]}px`,
+                        top: "0px",
+                        height: "150px",
+                        width: "auto",
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  );
+                })}
+              </div>
 
-      {/* ข้อความด้านล่าง */}
-      <div style={{ textAlign: "center", marginBottom: "80px" }}>
-        <h1 style={{ fontSize: "48px", marginBottom: "10px", color: "#fff" }}>
-          {titleText}
-        </h1>
-        <p style={{ fontSize: "24px", color: "#fff" }}>{subtitleText}</p>
-      </div>
+              {/* ข้อความ */}
+              <div
+                style={{
+                  marginTop: "150px",
+                  textAlign: "center",
+                  color: "#fff",
+                }}
+              >
+                <h1 style={{ fontSize: "48px", marginBottom: "10px" }}>{titleText}</h1>
+                <p style={{ fontSize: "24px" }}>{subtitleText}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* ปุ่ม Back (มุมซ้ายล่าง) */}
-      <button
-        onClick={handleBack}
-        style={{
-          position: "absolute",
-          bottom: "20px",
-          left: "20px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-        }}
-      >
-        Back
-      </button>
+        {/* ปุ่ม Back */}
+        <button
+          onClick={handleBack}
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            left: "20px",
+            padding: "10px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            zIndex: 2,
+          }}
+        >
+          Back
+        </button>
+      </div>
     </div>
   );
 };
