@@ -27,6 +27,7 @@ Front End is currently not merged into Main. Change Branches to FrontEnd.
 
    ```sh
    npm install
+   npm install framer-motion
    ```
    
 ### Running the Development Server
