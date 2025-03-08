@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ฟังก์ชันไล่สีพื้นหลัง (Phase 1)
+// ฟังก์ชันไล่สี (คงเดิม)
 function interpolateColor(start: string, end: string, fraction: number) {
   const parseHex = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -22,9 +22,9 @@ function interpolateColor(start: string, end: string, fraction: number) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// ประกาศ 3 Phase: 1, 2, 3
+// ประกาศ 3 Phase: 1(5s), 2(3s), 3(2s)
 type Phase = 1 | 2 | 3;
-type MinionState = 0 | 1 | 2; // 0=ซ่อน, 1=สีขาว, 2=สี
+type MinionState = 0 | 1 | 2; // 0=ซ่อน, 1=ขาว, 2=สี
 
 const LoadingPage = () => {
   const router = useRouter();
@@ -34,8 +34,11 @@ const LoadingPage = () => {
   // State: phase, countdown, fadeCountdown
   // -----------------------------
   const [phase, setPhase] = useState<Phase>(1);
-  const [countdown, setCountdown] = useState(5);      // สำหรับ Phase 1,2
-  const [fadeCountdown, setFadeCountdown] = useState(2); // สำหรับ Phase 3
+  const [countdown, setCountdown] = useState(5);   // Phase 1,2
+  const [fadeCountdown, setFadeCountdown] = useState(2); // Phase 3
+
+  // ★ เพิ่ม state สำหรับ “เวลา” ใน Phase 1 เพื่อไล่สีสมูท
+  const [timePassed, setTimePassed] = useState(0); // มิลลิวินาทีที่ผ่านไปใน Phase 1
 
   // -----------------------------
   // มินเนี่ยน
@@ -60,7 +63,7 @@ const LoadingPage = () => {
   const revealMinion = (index: number) => {
     setMinionStates((prev) => {
       const newArr = [...prev];
-      newArr[index] = 1; // สีขาว
+      newArr[index] = 1; // ขาว
       return newArr;
     });
     setTimeout(() => {
@@ -77,34 +80,35 @@ const LoadingPage = () => {
   // -----------------------------
   useEffect(() => {
     if (phase === 1) {
+      // นับถอยหลัง 1 วินาที (เพื่อเปิดตัวมินเนี่ยนทีละตัว)
       const timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
-      return () => clearInterval(timer);
+
+      // ★ อัปเดต timePassed ทุก 50ms => fraction ลื่นขึ้น
+      const startTime = Date.now();
+      const smoothInterval = setInterval(() => {
+        const diff = Date.now() - startTime;
+        setTimePassed(diff); // มิลลิวินาทีที่ผ่านไป
+      }, 20);
+
+      return () => {
+        clearInterval(timer);
+        clearInterval(smoothInterval);
+      };
     }
   }, [phase]);
 
-  // เปิดตัวมินเนี่ยน
+  // เปิดตัวมินเนี่ยนตาม countdown
   useEffect(() => {
     if (phase === 1) {
       switch (countdown) {
-        case 4:
-          revealMinion(0);
-          break;
-        case 3:
-          revealMinion(1);
-          break;
-        case 2:
-          revealMinion(2);
-          break;
-        case 1:
-          revealMinion(3);
-          break;
-        case 0:
-          revealMinion(4);
-          break;
-        default:
-          break;
+        case 4: revealMinion(0); break;
+        case 3: revealMinion(1); break;
+        case 2: revealMinion(2); break;
+        case 1: revealMinion(3); break;
+        case 0: revealMinion(4); break;
+        default: break;
       }
     }
   }, [phase, countdown]);
@@ -133,13 +137,12 @@ const LoadingPage = () => {
   useEffect(() => {
     if (phase === 2 && countdown <= 0) {
       setPhase(3);
-      setFadeCountdown(2); // ตัวอย่าง 2 วิ
+      setFadeCountdown(2);
     }
   }, [phase, countdown]);
 
   // -----------------------------
-  // Phase 3: crossfade -> background.png
-  // พร้อม fade out ตัวละคร+ข้อความ
+  // Phase 3: crossfade -> bg.png + fade out เนื้อหา
   // -----------------------------
   useEffect(() => {
     if (phase === 3) {
@@ -150,7 +153,7 @@ const LoadingPage = () => {
     }
   }, [phase]);
 
-  // เมื่อ fadeCountdown หมด => ไป /game
+  // หมด fadeCountdown => /game
   useEffect(() => {
     if (phase === 3 && fadeCountdown <= 0) {
       router.push(`/game?${searchParams.toString()}`);
@@ -158,18 +161,23 @@ const LoadingPage = () => {
   }, [phase, fadeCountdown, router, searchParams]);
 
   // -----------------------------
-  // ไล่สีพื้นหลัง Phase 1
+  // ไล่สีพื้นหลัง Phase 1: อิง timePassed
   // -----------------------------
   const startColor = "#A482E1";
   const endColor = "#C0CDA1";
   let fraction = 1;
+
   if (phase === 1) {
-    fraction = Math.min(1, Math.max(0, (5 - countdown) / 5));
+    // ใน 5 วินาที => fraction = timePassed / 5000
+    const maxDuration = 5000; // 5 วินาที = 5000 ms
+    const smoothFrac = Math.min(1, timePassed / maxDuration);
+    fraction = smoothFrac;
   } else if (phase === 2) {
     fraction = 1;
   } else {
     fraction = 1; // phase=3 => 1
   }
+
   const colorBg = interpolateColor(startColor, endColor, fraction);
 
   // -----------------------------
@@ -189,9 +197,6 @@ const LoadingPage = () => {
     router.push(`/configurationPage?${searchParams.toString()}`);
   };
 
-  // -----------------------------
-  // Rendering
-  // -----------------------------
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative", overflow: "hidden" }}>
       {/* พื้นหลังสี (Phase 1/2) */}
@@ -232,16 +237,15 @@ const LoadingPage = () => {
         )}
       </AnimatePresence>
 
-      {/* เนื้อหา */}
+      {/* เนื้อหา (มินเนี่ยน + ข้อความ) => fade out เมื่อ Phase=3 */}
       <div style={{ position: "relative", width: "100%", height: "100%", zIndex: 1 }}>
-        {/* ★ Fade out มินเนี่ยน+ข้อความ ใน Phase 3 => unmount (AnimatePresence) */}
         <AnimatePresence>
           {phase < 3 && (
             <motion.div
               key="minionsAndText"
               initial={{ opacity: 1 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }} // ตอน Phase=3 => จะ unmount => fade out
+              exit={{ opacity: 0 }} // fade out
               transition={{ duration: 1 }}
               style={{
                 width: "100%",
