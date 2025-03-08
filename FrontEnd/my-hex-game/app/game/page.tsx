@@ -15,6 +15,72 @@ import MinionStrategyInformation from "./minionStrategyInformation";
 import { initialGreenHexes } from "../../components/dataGreen";
 import { initialRedHexes } from "../../components/dataRed";
 
+// ---------- (1) ประกาศตัวแปร style สำหรับ Player ปกติ และ Blooming ----------
+const playerRedStyle = {
+  width: "250px",
+  height: "90px",
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+};
+
+const playerGreenStyle = {
+  width: "250px",
+  height: "90px",
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+};
+
+const bloomingRedStyle = {
+  width: "79.5px",
+  height: "79.5px",
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+};
+
+const bloomingGreenStyle = {
+  width: "79px",
+  height: "79px",
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+};
+
+// ---------- (2) ประกาศ variants สำหรับเอฟเฟกต์ wipe ----------
+const wipeFromLeft = {
+  hidden: {
+    clipPath: "inset(0 100% 0 0)",
+    opacity: 0,
+  },
+  visible: {
+    clipPath: "inset(0 0 0 0)",
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const wipeFromRight = {
+  hidden: {
+    clipPath: "inset(0 0 0 100%)",
+    opacity: 0,
+  },
+  visible: {
+    clipPath: "inset(0 0 0 0)",
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeInOut",
+    },
+  },
+};
+
+// Blooming ที่ไม่ต้องการอนิเมชั่นใด ๆ
+const noAnimationVariants = {
+  hidden: { opacity: 1 },
+  visible: { opacity: 1, transition: { duration: 0 } },
+};
+
 const Page = () => {
   const searchParams = useSearchParams();
   const { minions } = useUserStrategy();
@@ -48,12 +114,12 @@ const Page = () => {
   // State สำหรับระบบเกม
   const [greenCoin, setGreenCoin] = useState<number>(param_init_budget);
   const [redCoin, setRedCoin] = useState<number>(param_init_budget);
-
-  // ใช้ max_turns แทน remainingTurns
   const [remainingTurns, setRemainingTurns] = useState<number>(param_max_turns);
-
   const [canAct, setCanAct] = useState<boolean>(true);
   const [locked, setLocked] = useState<boolean>(false);
+
+  // กำหนด Player 1 = green, Player 2 = red
+  // ผู้ใช้ต้องการ Player 1 อยู่ "ซ้ายบน", Player 2 อยู่ "ขวาล่าง"
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
   // พื้นที่เริ่มต้น
@@ -68,14 +134,14 @@ const Page = () => {
     setRedCoin((prev) => Math.max(0, prev - amount));
   };
 
-  // เมื่อกดปุ่มเปลี่ยนเทิร์น (SandTime)
+  // เมื่อกดเปลี่ยนเทิร์น
   const handleAction = () => {
     if (remainingTurns > 0 && canAct) {
       setRemainingTurns((prev) => prev - 1);
       setCanAct(true);
       setLocked(false);
 
-      // ตัวอย่างการเพิ่ม budget แต่ละเทิร์น + ดอกเบี้ย
+      // เพิ่ม budget + ดอกเบี้ย
       if (currentTurn === "green") {
         setGreenCoin((prev) => {
           let newBudget = prev + param_turn_budget;
@@ -129,7 +195,7 @@ const Page = () => {
   return (
     <UserStrategyProvider>
       <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
-        
+
         {/* ปุ่ม Show Info มุมขวาบน */}
         <button
           className="absolute top-10 right-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition"
@@ -138,42 +204,78 @@ const Page = () => {
           Show Info
         </button>
 
-        {/* Player 2 Info (ด้านบนซ้าย) */}
+        {/* -------------------------
+            Player 1 = Green
+            ต้องการให้ "ซ้ายบน" คือ Player 1
+            ถ้าเป็นเทิร์น green => playerGreen.png + "Player 1"
+            ถ้าไม่ใช่ => BloomingRed (ไม่มีข้อความ)
+        ------------------------- */}
         <motion.div
-          className="absolute w-[250px] h-[90px]"
+          key={`player1-${currentTurn}`}
+          variants={currentTurn === "green" ? wipeFromLeft : noAnimationVariants}
+          initial="hidden"
+          animate="visible"
+          className="absolute"
           style={{
             top: "20px",
             left: "30px",
-            backgroundImage: "url('/playerRed.png')",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
+            ...(currentTurn === "green" ? playerGreenStyle : bloomingRedStyle),
+            backgroundImage:
+              currentTurn === "green"
+                ? "url('/playerRed.png')"
+                : "url('/BloomingGreen.png')",
           }}
         >
-          <motion.span
-            className="absolute text-2xl font-bold text-black"
-            style={{ top: "25px", left: "100px" }}
-          >
-            Player 2
-          </motion.span>
+          {/* ถ้าเทิร์น green => แสดง "Player 1" */}
+          {currentTurn === "green" && (
+            <motion.span
+              className="absolute text-2xl font-bold"
+              style={{
+                top: "18px",
+                left: "110px",
+                color: "#362C22",
+              }}
+            >
+              Player 1
+            </motion.span>
+          )}
         </motion.div>
 
-        {/* Player 1 Info (ด้านล่างขวา) */}
+        {/* -------------------------
+            Player 2 = Red
+            ต้องการให้ "ขวาล่าง" คือ Player 2
+            ถ้าเป็นเทิร์น red => playerRed.png + "Player 2"
+            ถ้าไม่ใช่ => BloomingGreen (ไม่มีข้อความ)
+        ------------------------- */}
         <motion.div
-          className="absolute w-[250px] h-[90px]"
+          key={`player2-${currentTurn}`}
+          variants={currentTurn === "red" ? wipeFromRight : noAnimationVariants}
+          initial="hidden"
+          animate="visible"
+          className="absolute"
           style={{
             bottom: "20px",
             right: "30px",
-            backgroundImage: "url('/playerGreen.png')",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
+            ...(currentTurn === "red" ? playerRedStyle : bloomingGreenStyle),
+            backgroundImage:
+              currentTurn === "red"
+                ? "url('/playerGreen.png')"
+                : "url('/BloomingRed.png')",
           }}
         >
-          <motion.span
-            className="absolute text-2xl font-bold text-black"
-            style={{ top: "25px", left: "60px" }}
-          >
-            Player 1
-          </motion.span>
+          {/* ถ้าเทิร์น red => แสดง "Player 2" */}
+          {currentTurn === "red" && (
+            <motion.span
+              className="absolute text-2xl font-bold"
+              style={{
+                top: "19px",
+                left: "60px",
+                color: "#362C22",
+              }}
+            >
+              Player 2
+            </motion.span>
+          )}
         </motion.div>
 
         {/* HexGrid ตรงกลาง */}
