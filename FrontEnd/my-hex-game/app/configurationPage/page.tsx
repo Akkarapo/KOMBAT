@@ -52,7 +52,7 @@ const ConfigurationPage = () => {
   
     // ✅ ส่งค่า `count` + `defenseData` + ค่าที่ตั้งค่ามาไปยัง `/game`
     const queryParams = new URLSearchParams({ count, defenseData, ...config }).toString();
-    router.push(`/game?${queryParams}`);
+    router.push(`/loadingPage?${queryParams}`);
   };  
 
   const handleBack = () => {
