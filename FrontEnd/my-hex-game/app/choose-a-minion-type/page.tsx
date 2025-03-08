@@ -136,7 +136,7 @@ const ChooseMinionType: React.FC = () => {
             src={`/Model0${selected + 1}.png`}
             alt={`Model ${selected + 1}`}
             animate={{ rotateY: 180 }}
-            className="object-contain w-[400px] h-[400px]"
+            className="object-contain w-[500px] h-[500px]"
           />
         </motion.div>
       )}
