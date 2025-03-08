@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import BuyButton from "../components/BuyButton"; // หากไฟล์ BuyButton อยู่คนละ path ให้แก้ตามจริง
+import BuyButton from "../components/BuyButton";
+import { initialGreenHexes } from "./dataGreen";
+import { initialRedHexes } from "./dataRed";
 
 const HEX_RADIUS = 40;
 const COLS = 8;
@@ -10,20 +12,20 @@ const HEX_WIDTH = 2 * HEX_RADIUS;
 const HEX_HEIGHT = Math.sqrt(3) * HEX_RADIUS;
 
 interface HexGridProps {
-  /** จำนวนเงินที่ต้องใช้ในการซื้อพื้นที่ (ดึงมาจริง ๆ จาก config) */
   hexPurchaseCost: number;
   deductMoney: (amount: number) => void;
   greenCoin: number;
   redCoin: number;
   canAct: boolean;
-  locked: boolean;
+  locked: boolean; // บอกว่าในเทิร์นนี้ได้ซื้อไปแล้วหรือยัง
   setLocked: React.Dispatch<React.SetStateAction<boolean>>;
   currentColor: "green" | "red";
   greenHexes: string[];
   redHexes: string[];
   setGreenHexes: React.Dispatch<React.SetStateAction<string[]>>;
   setRedHexes: React.Dispatch<React.SetStateAction<string[]>>;
-  openMinionsCard: () => void; // เรียกป๊อบอัพ MinionsCard
+  openMinionsCard: () => void;
+  maxSpawns: number;
 }
 
 const HexGrid: React.FC<HexGridProps> = ({
@@ -40,6 +42,7 @@ const HexGrid: React.FC<HexGridProps> = ({
   setGreenHexes,
   setRedHexes,
   openMinionsCard,
+  maxSpawns,
 }) => {
   // เก็บสีของแต่ละ Hex
   const [selectedHexes, setSelectedHexes] = useState<Record<string, string>>({});
@@ -48,23 +51,41 @@ const HexGrid: React.FC<HexGridProps> = ({
   const [pendingHex, setPendingHex] = useState<string | null>(null);
   const [buyButtonPosition, setBuyButtonPosition] = useState<{ x: number; y: number } | null>(null);
 
-  // สร้าง map ของพื้นที่ + adjacency
   useEffect(() => {
+    // 1) สร้าง map ของพื้นที่ที่ผู้เล่นถือครอง
     const greenMap: Record<string, string> = {};
     greenHexes.forEach((key) => (greenMap[key] = "#68B671")); // พื้นที่สีเขียว
 
     const redMap: Record<string, string> = {};
     redHexes.forEach((key) => (redMap[key] = "#B6696B")); // พื้นที่สีแดง
 
-    // รวมพื้นที่ทั้งหมด + adjacency
-    setSelectedHexes({
+    // 2) รวมสีพื้นฐานของทั้งสองฝั่ง
+    let newSelectedHexes = {
       ...greenMap,
       ...redMap,
-      ...calculateAdjacentHexes({ ...greenMap, ...redMap }, currentColor),
-    });
-  }, [greenHexes, redHexes, currentColor]);
+    };
 
-  // คำนวณ adjacency (สีเหลือง #F4D03F สำหรับเขียว, สีแดงอ่อน #FFA07A สำหรับแดง)
+    // 3) ถ้ายังไม่ locked (ยังไม่ได้ซื้อในเทิร์นนี้) → ค่อยคำนวณ adjacency
+    if (!locked) {
+      const additionalGreen = greenHexes.filter(hex => !initialGreenHexes.includes(hex));
+      const additionalRed = redHexes.filter(hex => !initialRedHexes.includes(hex));
+
+      // เช็คจำนวนพื้นที่ที่ซื้อไปแล้วว่ายังไม่เกิน maxSpawns
+      if (
+        (currentColor === "green" && additionalGreen.length < maxSpawns) ||
+        (currentColor === "red" && additionalRed.length < maxSpawns)
+      ) {
+        newSelectedHexes = {
+          ...newSelectedHexes,
+          ...calculateAdjacentHexes(newSelectedHexes, currentColor),
+        };
+      }
+    }
+
+    setSelectedHexes(newSelectedHexes);
+  }, [greenHexes, redHexes, currentColor, locked]);
+
+  // ฟังก์ชันคำนวณ adjacency
   const calculateAdjacentHexes = (
     currentHexes: Record<string, string>,
     currentColor: "green" | "red"
@@ -73,7 +94,6 @@ const HexGrid: React.FC<HexGridProps> = ({
 
     Object.keys(currentHexes).forEach((hex) => {
       const color = currentHexes[hex];
-      // ต้องเป็นพื้นที่สีเขียว (#68B671) หรือสีแดง (#B6696B) ก่อน
       if (color !== "#68B671" && color !== "#B6696B") return;
 
       const match = hex.match(/\((\d+),(\d+)\)/);
@@ -83,12 +103,9 @@ const HexGrid: React.FC<HexGridProps> = ({
       const col = parseInt(match[2], 10);
       const isGreen = color === "#68B671";
 
-      // ถ้าเป็นตาของ green → คำนวณ adjacency ให้พื้นที่เขียว
-      // ถ้าเป็นตาของ red → คำนวณ adjacency ให้พื้นที่แดง
       if ((currentColor === "green" && isGreen) || (currentColor === "red" && !isGreen)) {
         const adjacentColor = isGreen ? "#F4D03F" : "#FFA07A";
 
-        // การเดินรอบ hex ต่างกันเล็กน้อยขึ้นอยู่กับ col เป็นคู่หรือคี่
         const directions =
           col % 2 === 0
             ? [
@@ -113,7 +130,6 @@ const HexGrid: React.FC<HexGridProps> = ({
           const adjCol = col + dc;
           const adjKey = `(${adjRow},${adjCol})`;
 
-          // อยู่ในขอบเขต และยังไม่มีสี (ไม่ได้เป็นของอีกฝั่ง)
           if (
             adjRow > 0 &&
             adjRow <= ROWS &&
@@ -129,7 +145,7 @@ const HexGrid: React.FC<HexGridProps> = ({
     return adjacentHexes;
   };
 
-  // ★★ เคลียร์ปุ่ม Buy เมื่อ currentColor เปลี่ยน ★★
+  // เคลียร์ปุ่ม BUY เมื่อ currentColor เปลี่ยน
   useEffect(() => {
     setPendingHex(null);
     setBuyButtonPosition(null);
@@ -138,34 +154,31 @@ const HexGrid: React.FC<HexGridProps> = ({
   // ฟังก์ชันเรียกเมื่อคลิก hex
   const handleHexClick = (row: number, col: number) => {
     const key = `(${row},${col})`;
-    // ถ้าเทิร์นยังไม่พร้อม หรือ hex ไม่มีสี → return
     if (!canAct || locked || !(key in selectedHexes)) return;
 
     const colorClicked = selectedHexes[key];
 
-    // ฝั่งเขียว
     if (currentColor === "green") {
-      // ถ้าคลิกพื้นที่สีเขียว (#68B671) → เปิดป๊อบอัพ MinionsCard
       if (colorClicked === "#68B671") {
+        // ถ้าคลิกพื้นที่สีเขียว → เปิดป๊อบอัพ MinionsCard
         openMinionsCard();
         return;
       }
-      // ถ้าคลิกสีเหลือง (#F4D03F) → แสดงปุ่ม BUY
       if (colorClicked === "#F4D03F") {
+        // ถ้าคลิกพื้นที่สีเหลือง → แสดงปุ่ม BUY
         showOrToggleBuyButton(key);
         return;
       }
     }
 
-    // ฝั่งแดง
     if (currentColor === "red") {
-      // ถ้าคลิกพื้นที่สีแดง (#B6696B) → เปิดป๊อบอัพ
       if (colorClicked === "#B6696B") {
+        // ถ้าคลิกพื้นที่สีแดง → เปิดป๊อบอัพ MinionsCard
         openMinionsCard();
         return;
       }
-      // ถ้าคลิกสีแดงอ่อน (#FFA07A) → แสดงปุ่ม BUY
       if (colorClicked === "#FFA07A") {
+        // ถ้าคลิกพื้นที่สีแดงอ่อน → แสดงปุ่ม BUY
         showOrToggleBuyButton(key);
         return;
       }
@@ -174,17 +187,12 @@ const HexGrid: React.FC<HexGridProps> = ({
 
   // ฟังก์ชันสำหรับแสดง/ซ่อนปุ่ม BUY เมื่อคลิก adjacency
   const showOrToggleBuyButton = (hexKey: string) => {
-    // ถ้าคลิกซ้ำตำแหน่งที่ปุ่ม BUY แสดงอยู่ → ปิดปุ่ม BUY
     if (pendingHex === hexKey) {
       setPendingHex(null);
       setBuyButtonPosition(null);
       return;
     }
-
-    // มิฉะนั้น แสดงปุ่ม BUY ในตำแหน่งใหม่
     setPendingHex(hexKey);
-
-    // แปลง (row, col) จาก key "(3,5)" → row=3 col=5
     const match = hexKey.match(/\((\d+),(\d+)\)/);
     if (!match) return;
     const row = parseInt(match[1], 10);
@@ -193,7 +201,6 @@ const HexGrid: React.FC<HexGridProps> = ({
     const xOffset = -20;
     const yOffset = 5;
 
-    // คำนวณตำแหน่งปุ่ม
     const x = col * HEX_WIDTH * 0.75 + xOffset;
     const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0) + yOffset;
 
@@ -204,17 +211,28 @@ const HexGrid: React.FC<HexGridProps> = ({
   const handleBuy = () => {
     if (!pendingHex) return;
 
-    // เพิ่ม hex นี้ลงในพื้นที่ของผู้เล่น
+    // เช็คจำนวนพื้นที่ที่ซื้อเพิ่มเติม (ไม่รวมพื้นที่เริ่มต้น)
+    const additionalHexes =
+      currentColor === "green"
+        ? greenHexes.filter(hex => !initialGreenHexes.includes(hex))
+        : redHexes.filter(hex => !initialRedHexes.includes(hex));
+
+    // ถ้าซื้อครบแล้ว => return เฉย ๆ
+    if (additionalHexes.length >= maxSpawns) {
+      return;
+    }
+
+    // ซื้อได้
     if (currentColor === "green") {
       setGreenHexes((prev) => [...prev, pendingHex]);
     } else {
       setRedHexes((prev) => [...prev, pendingHex]);
     }
 
-    // หัก coin ตามค่าที่ส่งมาจริง ๆ
+    // หักเงิน
     deductMoney(hexPurchaseCost);
 
-    // ล็อกไม่ให้เทิร์นเดียวกันซื้อซ้ำ
+    // ล็อกเพื่อไม่ให้ซื้อซ้ำในเทิร์นเดียวกัน
     setLocked(true);
 
     // ปิดปุ่ม BUY
@@ -238,7 +256,6 @@ const HexGrid: React.FC<HexGridProps> = ({
       >
         {Array.from({ length: ROWS }, (_, row) =>
           Array.from({ length: COLS }, (_, col) => {
-            // วาด Hex จากขวาไปซ้าย (ตามโค้ดดั้งเดิม)
             const x = (COLS - col - 1) * HEX_WIDTH * 0.75;
             const y = row * HEX_HEIGHT + (col % 2 === 1 ? HEX_HEIGHT / 2 : 0);
             const key = `(${row + 1},${COLS - col})`;
@@ -266,7 +283,6 @@ const HexGrid: React.FC<HexGridProps> = ({
         )}
       </svg>
 
-      {/* ถ้ามี pendingHex → แสดงปุ่ม BUY */}
       {pendingHex && buyButtonPosition && (
         <BuyButton onBuy={handleBuy} position={buyButtonPosition} />
       )}

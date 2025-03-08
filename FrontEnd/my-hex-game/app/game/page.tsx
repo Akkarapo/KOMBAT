@@ -11,13 +11,15 @@ import { useUserStrategy, UserStrategyProvider } from "../choose-strategy/userSt
 import InformationForPlayers from "./InformationForPlayers";
 import MinionStrategyInformation from "./minionStrategyInformation";
 
+// นำเข้าพื้นที่เริ่มต้น (ปรับ path ตามโปรเจกต์จริง)
+import { initialGreenHexes } from "../../components/dataGreen";
+import { initialRedHexes } from "../../components/dataRed";
+
 const Page = () => {
   const searchParams = useSearchParams();
   const { minions } = useUserStrategy();
 
-  // -----------------------------------------
   // ดึงค่าคอนฟิกจาก query string (หรือใช้ default)
-  // -----------------------------------------
   const param_spawn_cost = parseInt(searchParams.get("spawn_cost") || "50", 10);
   const param_hex_purchase_cost = parseInt(searchParams.get("hex_purchase_cost") || "100", 10);
   const param_init_budget = parseInt(searchParams.get("init_budget") || "2000", 10);
@@ -28,9 +30,7 @@ const Page = () => {
   const param_max_turns = parseInt(searchParams.get("max_turns") || "100", 10);
   const param_max_spawns = parseInt(searchParams.get("max_spawns") || "5", 10);
 
-  // -----------------------------------------
   // โหลดค่าจาก URL (เช่น mode, count)
-  // -----------------------------------------
   const [mode, setMode] = useState<string>("Loading...");
   const [minionCount, setMinionCount] = useState<number>(0);
 
@@ -42,14 +42,10 @@ const Page = () => {
     setMinionCount(count);
   }, [searchParams]);
 
-  // -----------------------------------------
   // ประกาศ minionNames เพื่อใช้ส่งให้ MinionsCard
-  // -----------------------------------------
   const minionNames = minions.map((m) => m.name);
 
-  // -----------------------------------------
   // State สำหรับระบบเกม
-  // -----------------------------------------
   const [greenCoin, setGreenCoin] = useState<number>(param_init_budget);
   const [redCoin, setRedCoin] = useState<number>(param_init_budget);
 
@@ -61,12 +57,8 @@ const Page = () => {
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
   // พื้นที่เริ่มต้น
-  const [greenHexes, setGreenHexes] = useState<string[]>([
-    "(1,1)", "(1,2)", "(2,1)", "(2,2)", "(1,3)",
-  ]);
-  const [redHexes, setRedHexes] = useState<string[]>([
-    "(7,7)", "(7,8)", "(8,6)", "(8,7)", "(8,8)",
-  ]);
+  const [greenHexes, setGreenHexes] = useState<string[]>([...initialGreenHexes]);
+  const [redHexes, setRedHexes] = useState<string[]>([...initialRedHexes]);
 
   // ฟังก์ชันหักเงิน
   const deductGreenCoin = (amount: number) => {
@@ -105,9 +97,7 @@ const Page = () => {
     }
   };
 
-  // -------------------------------
   // Popup MinionsCard
-  // -------------------------------
   const [showPopup, setShowPopup] = useState(false);
   const openPopup = () => setShowPopup(true);
   const closePopup = () => setShowPopup(false);
@@ -118,14 +108,10 @@ const Page = () => {
     closePopup();
   };
 
-  // -------------------------------
   // Popup InformationForPlayers
-  // -------------------------------
   const [showInfoPopup, setShowInfoPopup] = useState(false);
 
-  // -------------------------------
   // Popup MinionStrategyInformation
-  // -------------------------------
   const [showStrategyPopup, setShowStrategyPopup] = useState(false);
   const [strategyMinionId, setStrategyMinionId] = useState<number | null>(null);
 
@@ -206,6 +192,7 @@ const Page = () => {
             setGreenHexes={setGreenHexes}
             setRedHexes={setRedHexes}
             openMinionsCard={openPopup}
+            maxSpawns={param_max_spawns}
           />
         </div>
 
@@ -237,7 +224,7 @@ const Page = () => {
           onClose={closePopup}
           onSelect={selectCard}
           minionCount={minionCount}
-          minionNames={minionNames} // ใช้ตัวแปร minionNames ที่ประกาศข้างบน
+          minionNames={minionNames}
         />
 
         {/* Popup InformationForPlayers */}
