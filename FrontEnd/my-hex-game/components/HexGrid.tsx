@@ -129,6 +129,12 @@ const HexGrid: React.FC<HexGridProps> = ({
     return adjacentHexes;
   };
 
+  // ★★ เคลียร์ปุ่ม Buy เมื่อ currentColor เปลี่ยน ★★
+  useEffect(() => {
+    setPendingHex(null);
+    setBuyButtonPosition(null);
+  }, [currentColor]);
+
   // ฟังก์ชันเรียกเมื่อคลิก hex
   const handleHexClick = (row: number, col: number) => {
     const key = `(${row},${col})`;
