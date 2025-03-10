@@ -6,61 +6,80 @@ import HexData from "./HexData";
 import Image from "next/image";
 import imageMapping from "./imageMapping";
 import { motion } from "framer-motion";
+import AutoConfigButton from "./autoConfig"; // (1) import คอมโพเนนต์ปุ่ม Auto Config
 
 const backgroundImage = "/backgroundConfiguration.png";
 
 const ConfigurationPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const count = searchParams.get("count") || localStorage.getItem("minionCount") || "1"; // ✅ โหลดค่า count
 
-  const initialConfig: { [key in keyof typeof HexData]: string } = Object.keys(HexData).reduce(
+  // โหลดค่าเริ่มต้นของจำนวน kind (minionCount)
+  const count = searchParams.get("count") || localStorage.getItem("minionCount") || "1";
+
+  // ประกาศชนิดของ config (อ้างอิง key จาก HexData)
+  type ConfigType = { [key in keyof typeof HexData]: string };
+
+  // กำหนด state สำหรับ config
+  const initialConfig: ConfigType = Object.keys(HexData).reduce(
     (acc, key) => ({ ...acc, [key]: "" }),
-    {} as { [key in keyof typeof HexData]: string }
+    {} as ConfigType
   );
 
-  const [config, setConfig] = useState(initialConfig);
+  const [config, setConfig] = useState<ConfigType>(initialConfig);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
+  // โหลดค่า config จาก localStorage (ถ้ามี) 
   useEffect(() => {
     const savedConfig = localStorage.getItem("hexConfig");
     if (savedConfig) {
       setConfig(JSON.parse(savedConfig));
     }
-  }, []); // ✅ โหลดค่า config ครั้งเดียว
+  }, []);
 
+  // เมื่อมีการแก้ไข input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setConfig((prev) => ({ ...prev, [name]: value }));
     setMissingFields((prev) => prev.filter((field) => field !== name));
   };
 
+  // กดปุ่ม Confirm
   const handleConfirm = () => {
-    const emptyFields = Object.keys(config).filter((key) => config[key as keyof typeof config] === "");
-  
+    const emptyFields = Object.keys(config).filter((key) => config[key as keyof ConfigType] === "");
     if (emptyFields.length > 0) {
       setMissingFields(emptyFields);
       return;
     }
-  
+
     localStorage.setItem("hexConfig", JSON.stringify(config));
-  
-    // ✅ ดึงค่าทั้งหมดจาก URL
+
     const params = new URLSearchParams(window.location.search);
     const count = params.get("count") || "1";
     const defenseData = params.get("defenseData") || "";
-  
-    // ✅ ส่งค่า `count` + `defenseData` + ค่าที่ตั้งค่ามาไปยัง `/game`
+
     const queryParams = new URLSearchParams({ count, defenseData, ...config }).toString();
     router.push(`/loadingPage?${queryParams}`);
-  };  
+  };
 
+  // กดปุ่ม Back
   const handleBack = () => {
-    localStorage.setItem("hexConfig", JSON.stringify(config)); // ✅ บันทึก config ก่อนออกจากหน้า
+    localStorage.setItem("hexConfig", JSON.stringify(config));
     const savedCount = localStorage.getItem("minionCount") || "1";
     router.push(`/choose-a-minion-type?count=${savedCount}`);
   };
 
+  // (3) ฟังก์ชันสำหรับส่งให้ AutoConfigButton
+  //     - เซต config อัตโนมัติ
+  const handleSetConfig = (newConfig: ConfigType) => {
+    setConfig(newConfig);
+  };
+  //     - ล้าง missingFields
+  const handleClearMissingFields = () => {
+    setMissingFields([]);
+  };
+
+  // แยกฟิลด์ด้านซ้ายและด้านขวา
   const keys = Object.keys(HexData);
   const leftFields = keys.slice(0, 5);
   const rightFields = keys.slice(5);
@@ -92,7 +111,10 @@ const ConfigurationPage = () => {
         Configuration
       </motion.h1>
 
-      <div className="grid grid-cols-2 w-full" style={{ maxWidth: "1400px", padding: "20px", marginTop: "-40px", marginLeft: "0px", gap: "10px" }}>
+      <div
+        className="grid grid-cols-2 w-full"
+        style={{ maxWidth: "1400px", padding: "20px", marginTop: "-40px", marginLeft: "0px", gap: "10px" }}
+      >
         {[leftFields, rightFields].map((fields, colIndex) => (
           <div key={colIndex} className="flex flex-col items-center" style={{ gap: "10px" }}>
             {fields.map((key, index) => (
@@ -114,7 +136,7 @@ const ConfigurationPage = () => {
                 <input
                   type="number"
                   name={key}
-                  value={config[key as keyof typeof config]}
+                  value={config[key as keyof ConfigType]}
                   onChange={handleChange}
                   placeholder={HexData[key as keyof typeof HexData]}
                   className={`border-none outline-none bg-transparent text-black text-left ${
@@ -138,8 +160,28 @@ const ConfigurationPage = () => {
         ))}
       </div>
 
-      <motion.button onClick={handleBack} className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }} />
-      <motion.button onClick={handleConfirm} className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat" style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }} />
+      {/* ปุ่ม Back */}
+      <motion.button
+        onClick={handleBack}
+        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
+        style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
+      />
+
+      {/* ปุ่ม Confirm */}
+      <motion.button
+        onClick={handleConfirm}
+        className="absolute bottom-[20px] right-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
+        style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }}
+      />
+
+      {/* 
+        (4) เรียกใช้ AutoConfigButton
+        ส่งฟังก์ชัน handleSetConfig และ handleClearMissingFields เป็น props
+      */}
+      <AutoConfigButton
+        onSetConfig={handleSetConfig}
+        onClearMissingFields={handleClearMissingFields}
+      />
     </div>
   );
 };

@@ -135,33 +135,45 @@ const Page = () => {
   };
 
   // เมื่อกดเปลี่ยนเทิร์น
-  const handleAction = () => {
-    if (remainingTurns > 0 && canAct) {
-      setRemainingTurns((prev) => prev - 1);
-      setCanAct(true);
-      setLocked(false);
+  // เมื่อกดเปลี่ยนเทิร์น
+const handleAction = () => {
+  if (remainingTurns > 0 && canAct) {
+    setRemainingTurns((prev) => prev - 1);
+    setCanAct(true);
+    setLocked(false);
 
-      // เพิ่ม budget + ดอกเบี้ย
-      if (currentTurn === "green") {
-        setGreenCoin((prev) => {
-          let newBudget = prev + param_turn_budget;
-          newBudget += Math.floor(newBudget * param_interest_pct);
-          newBudget = Math.min(newBudget, param_max_budget);
-          return newBudget;
-        });
-      } else {
-        setRedCoin((prev) => {
-          let newBudget = prev + param_turn_budget;
-          newBudget += Math.floor(newBudget * param_interest_pct);
-          newBudget = Math.min(newBudget, param_max_budget);
-          return newBudget;
-        });
-      }
+    // กำหนดฐานของ log ที่ต้องการใช้ (10 หรือ Math.E)
+    const interestBase = 10; // เปลี่ยนเป็น Math.E หากต้องการใช้ ln
 
-      // สลับตา
-      setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
+    // เพิ่ม budget + ดอกเบี้ยแบบลดทอนการเติบโต
+    if (currentTurn === "green") {
+      setGreenCoin((prev) => {
+        let newBudget = prev + param_turn_budget;
+        // คำนวณดอกเบี้ยตามสูตร I = r * log_b(A + 1)
+        const interest = Math.floor(
+          param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+        );
+        newBudget += interest;
+        newBudget = Math.min(newBudget, param_max_budget);
+        return newBudget;
+      });
+    } else {
+      setRedCoin((prev) => {
+        let newBudget = prev + param_turn_budget;
+        const interest = Math.floor(
+          param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+        );
+        newBudget += interest;
+        newBudget = Math.min(newBudget, param_max_budget);
+        return newBudget;
+      });
     }
-  };
+
+    // สลับเทิร์น
+    setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
+  }
+};
+
 
   // Popup MinionsCard
   const [showPopup, setShowPopup] = useState(false);
