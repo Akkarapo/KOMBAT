@@ -174,7 +174,6 @@ const handleAction = () => {
   }
 };
 
-
   // Popup MinionsCard
   const [showPopup, setShowPopup] = useState(false);
   const openPopup = () => setShowPopup(true);
