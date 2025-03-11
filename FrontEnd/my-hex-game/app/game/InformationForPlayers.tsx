@@ -8,11 +8,12 @@ import { HexData, imageMapping } from "./HexData";
 interface InformationForPlayersProps {
   isOpen: boolean;
   onClose: () => void;
-  onMinionCardClick?: (id: number) => void;
+  onMinionCardClick?: (id: number) => void; // ฟังก์ชัน callback เมื่อคลิกการ์ดมินเนี่ยน
 }
 
+// **สำคัญ** ประกาศ MinionData ให้มี id: number
 interface MinionData {
-  id: number;
+  id: number;        // มีฟิลด์ id เพื่อป้องกัน error Property 'id' does not exist
   name: string;
   defense: number;
   strategy: string;
@@ -46,11 +47,11 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // โหลด config
+      // โหลด config จาก localStorage
       const localConfig = localStorage.getItem("hexConfig");
       let parsedConfig = localConfig ? JSON.parse(localConfig) : {};
 
-      // Override ค่าจาก query
+      // Override ค่าจาก query (หากมี)
       Object.keys(HexData).forEach((key) => {
         const paramValue = searchParams.get(key);
         if (paramValue) {
@@ -59,7 +60,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
       });
       setConfig(parsedConfig);
 
-      // โหลดมินเนี่ยน
+      // โหลดข้อมูลมินเนี่ยนจาก query defenseData (เช่น "1:MinionOne:5:Strategy 1,2:MinionTwo:3:Strategy 2,...")
       const defenseDataString = searchParams.get("defenseData") || "";
       if (defenseDataString) {
         const arr = defenseDataString.split(",").map((entry) => {
@@ -76,6 +77,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
     }
   }, [isOpen, searchParams]);
 
+  // แยก key ของ HexData เป็น 2 คอลัมน์ (สำหรับโชว์ใน UI)
   type HexDataKeys = keyof typeof HexData;
   const allKeys = Object.keys(HexData) as HexDataKeys[];
   const half = Math.ceil(allKeys.length / 2);
@@ -104,7 +106,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // หยุด event ไม่ให้ปิด popup
           >
             <h2
               style={{
@@ -236,6 +238,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
               }}
             >
               {minions.map((minion) => {
+                // ใช้ minion.id ได้โดยไม่ error เพราะใน interface มีประกาศไว้แล้ว
                 const cardImage = minionImages[minion.id] || "/defaultCard.png";
                 const iconPath = strategyIcons[minion.strategy] || null;
                 const spawnCost = config.spawn_cost || "0";

@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-interface MinionData {
+export interface MinionData { 
   minionId: number;
   name: string;
   defense: string;
