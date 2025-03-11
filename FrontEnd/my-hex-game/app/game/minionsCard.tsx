@@ -3,14 +3,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import MinionStrategyInformation from "./minionStrategyInformation"; // ✅ Import ป๊อปอัพข้อมูลกลยุทธ์
+import MinionStrategyInformation from "./minionStrategyInformation";
 
 interface MinionsCardProps {
   isOpen: boolean;
   onClose: () => void;
   minionCount: number;
   minionNames: string[];
-  onSelect?: (card: string) => void; // ✅ เพิ่ม onSelect (ไม่บังคับ)
+  onSelect?: (card: string) => void;
 }
 
 const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount, minionNames, onSelect }) => {
@@ -100,13 +100,13 @@ const MinionsCard: React.FC<MinionsCardProps> = ({ isOpen, onClose, minionCount,
                         className="w-full h-full object-contain rounded-lg"
                       />
 
-                      <div className="absolute" style={{ top: "5px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+                      <div className="absolute" style={{ top: "5px", left: "50px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
                         {searchParams.get("spawn_cost") || "0"}
                       </div>
-                      <div className="absolute" style={{ top: "30px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+                      <div className="absolute" style={{ top: "30px", left: "50px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
                         {minion?.defense ?? "0"}
                       </div>
-                      <div className="absolute" style={{ top: "55px", left: "55px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
+                      <div className="absolute" style={{ top: "55px", left: "50px", color: "#D3FFDC", fontSize: "18px", fontWeight: "bold" }}>
                         {searchParams.get("init_hp") || "0"}
                       </div>
 
