@@ -333,8 +333,8 @@ const HexGrid: React.FC<HexGridProps> = ({
 
     // ถ้ามีมินเนี่ยนหลายตัว -> วางซ้อนกัน
     return found.minions.map((m, idx) => {
-      const offsetX = 10 + idx * 25;
-      const offsetY = 10;
+      const offsetX = 5 + idx * 25;
+      const offsetY = -25;
       // สมมติชื่อไฟล์ Model01GREEN.png หรือ Model02RED.png
       const modelStr = m.minionId.toString().padStart(2, "0");
       const imageSrc = `/Model${modelStr}${color.toUpperCase()}.png`;
@@ -345,8 +345,8 @@ const HexGrid: React.FC<HexGridProps> = ({
           href={imageSrc}
           x={offsetX}
           y={offsetY}
-          width={40}
-          height={40}
+          width={75}
+          height={75}
         />
       );
     });

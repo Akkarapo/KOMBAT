@@ -10,7 +10,7 @@ interface BuyButtonProps {
 const BuyButton: React.FC<BuyButtonProps> = ({ onBuy, position }) => {
   return (
     <img
-      src="/BuyHex.png" // ไฟล์รูปปุ่ม
+      src="/BuyHex.png" 
       alt="Buy"
       onClick={onBuy}
       style={{

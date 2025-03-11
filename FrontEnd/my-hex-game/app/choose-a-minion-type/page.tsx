@@ -170,12 +170,9 @@ const ChooseMinionType: React.FC = () => {
     router.push("/choose-minions");
   };
 
-  // ปุ่ม Choose Strategy (ถ้าจะไปหน้ากลยุทธ์อื่น)
+  // ปุ่ม Choose Strategy
   const handleChooseStrategy = () => {
-    // ตัวอย่าง ถ้าอยากเปิด popup หรือเปลี่ยนหน้า
-    // router.push("/choose-strategy?someParam=xxx");
-    // หรือจะใส่อะไรก็ได้ตามต้องการ
-    alert("Go to choose strategy page (demo)");
+    router.push("/choose-strategy?someParam=xxx");
   };
 
   // ----------------------------------------------------

@@ -57,7 +57,7 @@ export default function ChooseStrategy() {
   // ✅ ปุ่ม Back กลับไปยังหน้าก่อนหน้า
   const handleBack = () => {
     console.log("Back button clicked");
-    router.push(`/choose-a-minion-type?count=${count}`);
+    router.push(`/choose-a-minion-type?count=${count}`); 
   };
 
   return (

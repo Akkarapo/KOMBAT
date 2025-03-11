@@ -1,10 +1,8 @@
-// minions.tsx
 "use client";
 import React from "react";
 
-// เดิมอาจจะเป็น interface PurchasedMinion { id: number; name?: string; }
 export interface PurchasedMinion {
-  minionId: number; // เปลี่ยนชื่อเป็น minionId ให้ตรงกับ userStrategyData
+  minionId: number;
   name?: string;
 }
 
@@ -32,8 +30,8 @@ const Minions: React.FC<MinionsProps> = ({ playerColor, minions, onMinionClick }
               src={imageSrc}
               alt={minion.name || `Minion Model ${minion.minionId}`}
               style={{
-                width: "100%",
-                height: "100%",
+                width: "150%",
+                height: "150%",
                 objectFit: "contain",
                 borderRadius: "8px",
               }}
