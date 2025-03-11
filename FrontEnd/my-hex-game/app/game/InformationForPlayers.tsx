@@ -287,7 +287,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
                         style={{
                           position: "absolute",
                           top: "5px",
-                          left: "55px",
+                          left: "50px",
                           color: "#D3FFDC",
                           fontSize: "18px",
                           fontWeight: "bold",
@@ -300,7 +300,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
                         style={{
                           position: "absolute",
                           top: "30px",
-                          left: "55px",
+                          left: "50px",
                           color: "#D3FFDC",
                           fontSize: "18px",
                           fontWeight: "bold",
@@ -313,7 +313,7 @@ const InformationForPlayers: React.FC<InformationForPlayersProps> = ({
                         style={{
                           position: "absolute",
                           top: "55px",
-                          left: "55px",
+                          left: "50px",
                           color: "#D3FFDC",
                           fontSize: "18px",
                           fontWeight: "bold",

@@ -28,15 +28,16 @@ const playerGreenStyle = {
 };
 
 const bloomingRedStyle = {
-  width: "79.5px",
-  height: "79.5px",
+  width: "79px",
+  height: "79px",
   backgroundSize: "contain",
   backgroundRepeat: "no-repeat",
 };
 
 const bloomingGreenStyle = {
-  width: "79px",
-  height: "79px",
+  width: "80px",
+  height: "80px",
+  top: "628.5px",
   backgroundSize: "contain",
   backgroundRepeat: "no-repeat",
 };
