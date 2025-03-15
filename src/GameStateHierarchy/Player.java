@@ -1,14 +1,16 @@
 package com.example.demo.src.GameStateHierarchy;
-import com.example.demo.src.MinionAndStrategyHierarchy.*;
+
 
 public class Player {
     double      budget;
     String      PlayerNumber;
+    String      PlayerType;
     int         maxMinions;
     int         nowMinions;
 
-    public Player(String PlayerNumber,long budget,int maxMinions) {
+    public Player(String PlayerNumber,String PlayerType,long budget,int maxMinions) {
         this.PlayerNumber = PlayerNumber;
+        this.PlayerType = PlayerType;
         this.budget = budget;
         this.maxMinions = maxMinions;
         nowMinions = 0;
@@ -24,8 +26,8 @@ public class Player {
         this.budget += budget;
     }
 
-    public String getPlayerNumber() {
-        return PlayerNumber;
-    }
+    public String getPlayerNumber() {return PlayerNumber;}
+
+    public String getPlayerType() {return PlayerType;}
 
 }
