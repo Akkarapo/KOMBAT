@@ -1,6 +1,8 @@
-package com.example.demo.src.Parser;
-import com.example.demo.src.AST.Node;
-import com.example.demo.src.Exception.*;
+package com.example.demo.parser;
+
+import com.example.demo.ast.Node;
+import com.example.demo.exception.SyntaxError;
+
 public interface Parser {
     Node parse() throws SyntaxError;
 }

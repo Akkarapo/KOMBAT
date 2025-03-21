@@ -1,6 +1,7 @@
-package com.example.demo.src.Exception;
+package com.example.demo.exception;
 
-public class SyntaxError extends Exception{
-    public SyntaxError(String msg) { super(msg); }
+public class SyntaxError extends Exception {
+    public SyntaxError(String message) {
+        super(message);
+    }
 }
-

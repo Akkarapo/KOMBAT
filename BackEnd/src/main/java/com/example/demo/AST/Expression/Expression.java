@@ -1,8 +1,11 @@
-package com.example.demo.src.AST.Expression;
-import com.example.demo.src.AST.Node;
-import com.example.demo.src.GameStateHierarchy.Player;
+package com.example.demo.ast.expression;
 
+import com.example.demo.ast.Node;
+import com.example.demo.model.Player;
 
 public interface Expression extends Node {
-    double eval(Player player);// throws EvalError;
+    // Stub method สำหรับประเมินค่า
+    default Object eval(Player player) {
+        return null;
+    }
 }

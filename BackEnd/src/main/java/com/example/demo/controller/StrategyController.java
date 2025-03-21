@@ -1,12 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.src.Exception.SyntaxError;
-import com.example.demo.src.Parser.StatementParser;
-import com.example.demo.src.Tokenizer.Tokenizer;
-// ↑ import อื่น ๆ ตามไฟล์ parser ของคุณ
-
-import org.springframework.web.bind.annotation.*;
+import com.example.demo.exception.SyntaxError;
+import com.example.demo.parser.StatementParser;
+import com.example.demo.tokenizer.Tokenizer;
 import java.util.*;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -14,33 +12,28 @@ public class StrategyController {
 
     @PostMapping("/parseStrategy")
     public Map<String, Object> parseStrategy(@RequestBody Map<String, String> body) throws SyntaxError {
-        // 1) รับ string strategy จาก JSON body
         String strategyCode = body.get("strategy");
         if (strategyCode == null) {
             throw new IllegalArgumentException("No strategy code provided");
         }
 
-        // 2) สร้าง Tokenizer และ Parser ของคุณ
+        // สร้าง Tokenizer และ StatementParser
         Tokenizer tkz = new Tokenizer(strategyCode);
         StatementParser parser = new StatementParser(tkz);
-        // Node ast = parser.parse(); // สมมุติว่าคุณเปิด parse() ไว้แล้ว
+        // Node ast = parser.parse(); // (สามารถเปิดใช้งานเมื่อ implement parse() อย่างสมบูรณ์)
 
-        // TODO: แปลง AST -> Action list ตาม logic ของคุณ
-        // ในตัวอย่างนี้ ขอยกตัวอย่างผลลัพธ์เป็น Action 2 อัน
+        // Dummy action list ตัวอย่าง:
         List<Map<String, Object>> actions = new ArrayList<>();
-        
-        Map<String, Object> a1 = new HashMap<>();
-        a1.put("type", "move");
-        a1.put("direction", "up");
-        actions.add(a1);
+        Map<String, Object> action1 = new HashMap<>();
+        action1.put("type", "move");
+        action1.put("direction", "up");
+        actions.add(action1);
+        Map<String, Object> action2 = new HashMap<>();
+        action2.put("type", "shoot");
+        action2.put("direction", "up");
+        action2.put("cost", 10);
+        actions.add(action2);
 
-        Map<String, Object> a2 = new HashMap<>();
-        a2.put("type", "shoot");
-        a2.put("direction", "up");
-        a2.put("cost", 10);
-        actions.add(a2);
-
-        // 3) ใส่ลงใน result และส่งกลับ
         Map<String, Object> result = new HashMap<>();
         result.put("actions", actions);
         return result;

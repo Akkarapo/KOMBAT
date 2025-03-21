@@ -1,5 +1,5 @@
-package com.example.demo.src.AST;
+package com.example.demo.ast;
 
 public interface Node {
-    void prettyPrint(StringBuilder s);
+    void prettyPrint(StringBuilder sb);
 }
