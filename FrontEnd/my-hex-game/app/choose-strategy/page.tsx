@@ -35,29 +35,42 @@ const panelVariants = {
 export default function ChooseStrategy() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const count = searchParams.get("count") || "1"; // ✅ ดึงค่า count จาก URL
-  const minionId = searchParams.get("minionId") || "1"; // ✅ ดึงค่า minionId จาก URL
-  const { setStrategy } = useUserStrategy(); // ✅ ใช้ context เพื่อเก็บค่า strategy
-  const [selectedStrategy, setSelectedStrategy] = useState<keyof typeof strategyData>("Strategy 1");
+
+  // ✅ ดึงค่า count และ minionId จาก URL
+  const count = searchParams.get("count") || "1";
+  const minionId = searchParams.get("minionId") || "1";
+
+  // ✅ ใช้ context เพื่อเก็บค่า strategy
+  const { setStrategy } = useUserStrategy();
+
+  // ❗ เปลี่ยนให้เป็น string โดยตรง เพื่อไม่ให้ TypeScript ตีความผิด
+  const [selectedStrategy, setSelectedStrategy] = useState<string>("Strategy 1");
+
+  // ถ้าต้องการใช้ keyof typeof strategyData ก็ได้
+  // แต่ต้องแน่ใจว่า strategyData ไม่มี key เป็น number
+  // const [selectedStrategy, setSelectedStrategy] = useState<keyof typeof strategyData>("Strategy 1");
+
   const [customStrategy, setCustomStrategy] = useState<string>(strategyData["Strategy 1"]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // ✅ บันทึก Strategy ที่เลือกลง context และกลับไป choose-a-minion-type
+  // ✅ ฟังก์ชันบันทึก Strategy แล้วกลับไปหน้า choose-a-minion-type
   const handleConfirm = () => {
     console.log("Selected strategy:", selectedStrategy);
-    setStrategy(parseInt(minionId, 10), selectedStrategy);
-  
-    // ✅ ดึงค่า defenseData ที่เก็บค่าของทุก Minion
-    const defenseData = searchParams.get("defenseData") || "";
-    
-    // ✅ เปลี่ยนเส้นทางไปหน้ากรอกชื่อและค่าป้องกันของ Minion
-    router.push(`/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${defenseData}`);
-  };  
 
-  // ✅ ปุ่ม Back กลับไปยังหน้าก่อนหน้า
+    // parseInt -> number, selectedStrategy -> string
+    setStrategy(parseInt(minionId, 10), selectedStrategy);
+
+    // ดึง defenseData จาก URL
+    const defenseData = searchParams.get("defenseData") || "";
+
+    // เปลี่ยนเส้นทางไปกรอกชื่อ + ค่าป้องกัน minion
+    router.push(`/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${defenseData}`);
+  };
+
+  // ✅ ปุ่ม Back
   const handleBack = () => {
     console.log("Back button clicked");
-    router.push(`/choose-a-minion-type?count=${count}`); 
+    router.push(`/choose-a-minion-type?count=${count}`);
   };
 
   return (
@@ -65,7 +78,7 @@ export default function ChooseStrategy() {
       className="flex flex-row min-h-screen w-full bg-cover bg-center p-6"
       style={{ backgroundImage: `url('/backgroundHowTo.png')` }}
     >
-      {/* 🔹 Strategy Text Editor (Left Panel) - มีอนิเมชันแล้ว ✅ */}
+      {/* 🔹 Strategy Text Editor (Left Panel) */}
       <motion.div
         className="w-1/2"
         initial="hidden"
@@ -76,6 +89,7 @@ export default function ChooseStrategy() {
           <Textarea
             className={`w-full h-full text-2xl leading-relaxed whitespace-pre-wrap border-none outline-none resize-none bg-transparent shadow-none overflow-y-auto 
               ${selectedStrategy === "Strategy 3" && !isEditing ? "text-gray-400" : "text-black"}`}
+            // ถ้าเลือก Strategy 3 ให้แสดง customStrategy, ไม่งั้นดึงจาก strategyData
             value={selectedStrategy === "Strategy 3" ? customStrategy : strategyData[selectedStrategy]}
             onChange={(e) => {
               if (selectedStrategy === "Strategy 3") {
@@ -90,7 +104,9 @@ export default function ChooseStrategy() {
 
       {/* 🔹 Strategy Selection (Right Panel) */}
       <div className="w-1/2 flex flex-col items-center justify-center mt-[-40px]">
-        <h1 className="text-3xl text-white font-bold mb-8">Choose a strategy to equip your minions.</h1>
+        <h1 className="text-3xl text-white font-bold mb-8">
+          Choose a strategy to equip your minions.
+        </h1>
 
         <div className="space-y-6 w-[80%]">
           {Object.keys(strategyIcons).map((strategy, index) => (
@@ -99,23 +115,33 @@ export default function ChooseStrategy() {
               custom={index}
               initial="hidden"
               animate="visible"
-              variants={cardVariants} 
+              variants={cardVariants}
             >
               <Card
                 onClick={() => {
-                  setSelectedStrategy(strategy as keyof typeof strategyData);
+                  // เมื่อคลิก, set state เป็นกลยุทธ์นั้น
+                  setSelectedStrategy(strategy);
                   setIsEditing(false);
-                  if (strategy === "Strategy 3") setCustomStrategy(strategyData["Strategy 1"]);
+                  // ถ้าคลิก Strategy 3 ให้เอาโค้ดของ Strategy 1 มาเป็น base
+                  if (strategy === "Strategy 3") {
+                    setCustomStrategy(strategyData["Strategy 1"]);
+                  }
                 }}
                 className={`cursor-pointer p-6 h-[150px] bg-white bg-opacity-30 ${
                   selectedStrategy === strategy ? "border-[4px] border-black" : "border-[2px] border-gray-300"
                 }`}
-              >                  
+              >
                 <CardContent className="flex items-start space-x-6">
-                  <Image src={strategyIcons[strategy]} alt={strategy} width={60} height={60} style={{ marginTop: "-10px" }} />
+                  <Image
+                    src={strategyIcons[strategy]}
+                    alt={strategy}
+                    width={60}
+                    height={60}
+                    style={{ marginTop: "-10px" }}
+                  />
                   <div className="mt-[-15px]">
-                      <h2 className="text-2xl font-bold text-black">{strategy}</h2>
-                      <p className="text-black">
+                    <h2 className="text-2xl font-bold text-black">{strategy}</h2>
+                    <p className="text-black">
                       {strategy === "Strategy 1"
                         ? "Move towards the enemy if they are far away. Attack if nearby and have enough budget. Move if there are no enemies in range."
                         : strategy === "Strategy 2"
@@ -132,7 +158,14 @@ export default function ChooseStrategy() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.8 } }}
-            style={{ position: "fixed", bottom: "30px", left: "65px", right: "95px", display: "flex", justifyContent: "space-between" }}
+            style={{
+              position: "fixed",
+              bottom: "30px",
+              left: "65px",
+              right: "95px",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
           >
             <button onClick={handleBack} style={{ width: "192px", height: "80px" }}>
               <Image src="/BackButton.png" alt="Back" width={192} height={80} />
