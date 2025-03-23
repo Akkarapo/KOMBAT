@@ -37,3 +37,16 @@ npm run dev
 
 You should see something like this
 ![image](https://github.com/user-attachments/assets/6b93504c-5229-4417-90ac-0d9fcdab0e9a)
+
+
+## BackEnd Setup Guide
+### Installation
+1. go to frontend directory
+   ```sh
+   cd BackEnd
+   ```
+### Running the Development Server
+
+```sh
+mvn spring-boot:run
+```
