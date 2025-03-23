@@ -9,11 +9,9 @@ interface MinionActionsProps {
 }
 
 const MinionActions: React.FC<MinionActionsProps> = ({ strategy, gameState, onAction }) => {
-  // ใช้ hook useStrategy เพื่อรับ action list จาก API
   const actions = useStrategy(strategy, gameState);
 
   useEffect(() => {
-    // เมื่อได้ action listแล้ว ส่งแต่ละ actionไปให้ onAction เพื่อประมวลผล
     actions.forEach((action: Action) => {
       onAction(action);
     });

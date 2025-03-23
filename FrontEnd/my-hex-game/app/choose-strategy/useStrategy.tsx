@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
 // ---------- Interfaces สำหรับข้อมูลเกมและ Action ----------
@@ -5,9 +7,7 @@ import { useState, useEffect } from "react";
 export interface GameState {
   budget: number;
   opponentLoc: number;
-  // nearby เป็น object ที่เก็บค่าตัวเลขของ cell ในแต่ละทิศ เช่น { up: 3, down: 2, upleft: 1, ... }
   nearby: Record<string, number>;
-  // ค่าสุ่ม (random) ที่อาจใช้ใน strategy (ตัวอย่าง)
   random: number;
 }
 
@@ -15,52 +15,46 @@ export type ActionType = "move" | "shoot" | "done";
 
 export interface Action {
   type: ActionType;
-  // direction เช่น "upleft", "down", "upright" เป็นต้น
   direction?: string;
-  // cost (สำหรับ action แบบ shoot) ถ้ามี
   cost?: number;
-  // คุณสามารถเพิ่ม field อื่น ๆ ตามที่ engine ของคุณรองรับ
+  // สมมติว่าถ้าฝั่ง backend ส่งกลับพิกัดใหม่
+  newPosition?: string;
 }
 
-// ---------- ฟังก์ชันเรียก API เพื่อ parse strategy ด้วย Java parser ----------
-
-/**
- * parseStrategy
- * ส่ง strategy string ไปยัง backend API ที่ใช้ Java parser (ExprParser/StatementParser)
- * แล้วรับผลลัพธ์เป็น action list ในรูปแบบ JSON
- */
-async function parseStrategy(strategy: string): Promise<Action[]> {
-  const response = await fetch("/api/parseStrategy", {
+// ---------- ฟังก์ชันเรียก API เพื่อ parse strategy ด้วย Java parser + GameState ----------
+async function parseStrategy(strategy: string, gameState: GameState): Promise<Action[]> {
+  // เปลี่ยนจาก "/api/parseStrategy" เป็น "http://localhost:8080/api/parseStrategy"
+  // เพื่อชี้ไปที่ Spring Boot (ซึ่งรันบนพอร์ต 8080)
+  const response = await fetch("http://localhost:8080/api/parseStrategy", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ strategy }),
+    body: JSON.stringify({ strategy, gameState }),
   });
+
   if (!response.ok) {
     throw new Error("Failed to parse strategy");
   }
+
   const data = await response.json();
-  // สมมุติว่า API ส่งกลับ { actions: Action[] }
+  // สมมติว่า API ส่งกลับ { actions: Action[] }
   return data.actions as Action[];
 }
 
 // ---------- Hook useStrategy ----------
-
-/**
- * useStrategy
- * รับ strategy string (เช่นจาก strategyData.ts) และสถานะเกม (gameState)
- * จากนั้นเรียก parser ผ่าน API เพื่อแปลง strategy เป็น action list
- * และสามารถนำ gameState ไปปรับ interpreter logic ได้ในฝั่ง client (หรือ backend)
- */
+//
+// รับ strategy string และ gameState
+// จากนั้นเรียก parser ผ่าน API เพื่อให้ backend ประมวลผล
+// ส่งกลับ action list
+//
 export function useStrategy(strategy: string, gameState: GameState): Action[] {
   const [actions, setActions] = useState<Action[]>([]);
 
   useEffect(() => {
-    // เรียก parser ผ่าน API
-    parseStrategy(strategy)
+    // เพิ่ม console.log เพื่อตรวจสอบว่า useStrategy ถูกเรียกจริงหรือไม่
+    console.log("useStrategy called with strategy =", strategy);
+
+    parseStrategy(strategy, gameState)
       .then((parsedActions) => {
-        // ในที่นี้เราใช้ผลลัพธ์โดยตรง
-        // คุณสามารถเพิ่มขั้นตอนการปรับเปลี่ยน action list โดยใช้ gameState ได้ที่นี่
-        // ตัวอย่างเช่น ถ้างบประมาณไม่พอ อาจเปลี่ยน action shoot เป็น done เป็นต้น
         setActions(parsedActions);
       })
       .catch((error) => {
