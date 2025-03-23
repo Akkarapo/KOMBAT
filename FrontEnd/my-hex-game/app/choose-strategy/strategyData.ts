@@ -1,5 +1,6 @@
 export const strategyData: { [key: string]: string } = {
   "Strategy 1": `t = 0   
+t = t + 1
 m = 0 
 while (3 - m) {  
   if (budget - 100) then {} else done  
@@ -56,7 +57,8 @@ while (3 - m) {
   }
 }  `,
   
-  "Strategy 2": `t = 0   
+"Strategy 2": `t = 0   
+t = t + 1
 m = 0 
 while (3 - m) {  
   if (budget - 100) then {} else done  
@@ -111,5 +113,5 @@ while (3 - m) {
     }
     m = m + 1
   }
-}  `
+}    `
 };
