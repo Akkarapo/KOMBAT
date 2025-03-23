@@ -14,9 +14,8 @@ public class StatementParser implements Parser {
         "ally", "done", "down", "downleft", "downright", "else", "if",
         "invest", "move", "nearby", "opponent", "relocate", "shoot", "then", "up", "upleft", "upright", "while"
     };
-    private SyntaxError syntaxError_Direction = new SyntaxError("Expected Direction");
-    private SyntaxError syntaxError_Command = new SyntaxError("Expected Command");
-    protected SyntaxError syntaxError_identifier = new SyntaxError("Illegal Variable");
+    // ไม่ได้ใช้งาน จึงลบออกไป
+    // protected SyntaxError syntaxError_identifier = new SyntaxError("Illegal Variable");
 
     public StatementParser(Tokenizer tkz) {
         this.tkz = tkz;
