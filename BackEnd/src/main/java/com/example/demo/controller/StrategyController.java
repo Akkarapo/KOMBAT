@@ -2,7 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.exception.SyntaxError;
 import com.example.demo.parser.StatementParser;
+import com.example.demo.parser.StrategyInterpreter;
 import com.example.demo.tokenizer.Tokenizer;
+import com.example.demo.ast.Node;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,22 +19,14 @@ public class StrategyController {
             throw new IllegalArgumentException("No strategy code provided");
         }
 
-        // สร้าง Tokenizer และ StatementParser
+        // สร้าง Tokenizer และ StatementParser เพื่อแปลง DSL เป็น AST
         Tokenizer tkz = new Tokenizer(strategyCode);
         StatementParser parser = new StatementParser(tkz);
-        // Node ast = parser.parse(); // (สามารถเปิดใช้งานเมื่อ implement parse() อย่างสมบูรณ์)
+        Node ast = parser.parse();
 
-        // Dummy action list ตัวอย่าง:
-        List<Map<String, Object>> actions = new ArrayList<>();
-        Map<String, Object> action1 = new HashMap<>();
-        action1.put("type", "move");
-        action1.put("direction", "up");
-        actions.add(action1);
-        Map<String, Object> action2 = new HashMap<>();
-        action2.put("type", "shoot");
-        action2.put("direction", "up");
-        action2.put("cost", 10);
-        actions.add(action2);
+        // ใช้ StrategyInterpreter แปล AST เป็น action list
+        StrategyInterpreter interpreter = new StrategyInterpreter();
+        List<Map<String, Object>> actions = interpreter.interpret(ast);
 
         Map<String, Object> result = new HashMap<>();
         result.put("actions", actions);

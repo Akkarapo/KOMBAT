@@ -1,5 +1,5 @@
 export const strategyData: { [key: string]: string } = {
-  "Strategy 1": `t = t + 1  # keeping track of the turn number 
+  "Strategy 1": `t = 0  # keeping track of the turn number 
 m = 0  # number of random moves this turn
 while (3 - m) {  # made less than 3 random moves
   if (budget - 100) then {} else done  # too poor to do anything else

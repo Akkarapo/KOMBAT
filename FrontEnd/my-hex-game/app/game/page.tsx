@@ -1,16 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { calculateWinner } from "./winningConditions";
 import HexGrid from "../../components/HexGrid";
 import MinionsCard from "./minionsCard";
-import { useUserStrategy } from "../choose-strategy/userStrategyData"; 
+import { useUserStrategy } from "../choose-strategy/userStrategyData";
 import type { MinionData } from "../choose-strategy/userStrategyData";
 import InformationForPlayers from "./InformationForPlayers";
 import MinionStrategyInformation from "./minionStrategyInformation";
 import { initialGreenHexes, GreenHexData } from "../../components/dataGreen";
 import { initialRedHexes, RedHexData } from "../../components/dataRed";
+
+// ★★ นำเข้า MinionActions และ interfaces จาก useStrategy
+import MinionActions from "../choose-strategy/minionActions";
+import { Action, GameState } from "../choose-strategy/useStrategy";
 
 // ---------- ตัวแปร style สำหรับ Player / Blooming ----------
 const playerRedStyle = {
@@ -80,6 +85,7 @@ const noAnimationVariants = {
 };
 
 const Page = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { minions } = useUserStrategy(); // MinionData[] (มี minionId, name, defense, strategy, ...)
 
@@ -101,7 +107,6 @@ const Page = () => {
   useEffect(() => {
     const gameMode = searchParams.get("mode") || "Default";
     setMode(gameMode);
-
     const count = parseInt(searchParams.get("count") || "0", 10);
     setMinionCount(count);
   }, [searchParams]);
@@ -120,7 +125,7 @@ const Page = () => {
   const [greenHexes, setGreenHexes] = useState<GreenHexData[]>([...initialGreenHexes]);
   const [redHexes, setRedHexes] = useState<RedHexData[]>([...initialRedHexes]);
 
-  // ❶ State เก็บว่าเรา “คลิก Hex ไหน” เพื่อจะซื้อมินเนี่ยน
+  // State เก็บว่าเรา “คลิก Hex ไหน” เพื่อจะซื้อมินเนี่ยน
   const [selectedHexForMinion, setSelectedHexForMinion] = useState<string | null>(null);
 
   // เมื่อคลิก Hex สีเรา -> เก็บ selectedHexForMinion + เปิด Popup MinionsCard
@@ -144,9 +149,7 @@ const Page = () => {
       setCanAct(true);
       setLocked(false);
 
-      // คำนวณดอกเบี้ยแบบ log
       const interestBase = 10;
-
       if (currentTurn === "green") {
         setGreenCoin((prev) => {
           let newBudget = prev + param_turn_budget;
@@ -169,7 +172,6 @@ const Page = () => {
         });
       }
 
-      // สลับเทิร์น
       setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
     }
   };
@@ -182,11 +184,8 @@ const Page = () => {
   // เมื่อกดปุ่ม Buy สีดำบนการ์ด
   const handleBuyMinion = (minionName: string) => {
     if (!selectedHexForMinion) return;
-
-    // หา minionId จาก context
     const found = minions.find((m) => m.name === minionName);
     if (found) {
-      // ใส่มินเนี่ยนลงใน Hex นั้น
       if (currentTurn === "green") {
         setGreenHexes((prev) =>
           prev.map((hex) =>
@@ -211,8 +210,6 @@ const Page = () => {
         );
       }
     }
-
-    // ปิด popup + เคลียร์
     setSelectedHexForMinion(null);
     setShowMinionsCard(false);
   };
@@ -235,8 +232,58 @@ const Page = () => {
     setShowInfoPopup(true);
   };
 
+  // ★★ ดึง strategy DSL จาก query parameter (หรือใช้ค่า default "Strategy 1")
+  const strategyDSL = searchParams.get("strategy") || "Strategy 1";
+
+  // ★★ สร้าง gameState สำหรับส่งไปให้ MinionActions
+  const gameState: GameState = {
+    budget: currentTurn === "green" ? greenCoin : redCoin,
+    opponentLoc: 42, // ตัวอย่างค่า; ปรับให้เหมาะสมกับเกมจริง
+    nearby: { up: 1, down: 2, upleft: 1, upright: 1, downleft: 2, downright: 2 },
+    random: Math.floor(Math.random() * 100),
+  };
+
+  // ★★ ฟังก์ชันจัดการ action ที่ได้รับจาก MinionActions สำหรับแต่ละมินเนี่ยน
+  const handleMinionAction = (action: Action, minion: MinionData) => {
+    if (action.type === "move") {
+      console.log(`Minion ${minion.name} move to ${action.direction}`);
+      // TODO: ปรับปรุงตำแหน่งมินเนี่ยนใน HexGrid ตาม action.direction
+    } else if (action.type === "shoot") {
+      console.log(`Minion ${minion.name} shoot ${action.direction} with cost ${action.cost}`);
+      // TODO: ดำเนินการยิงและหักงบประมาณ
+    } else if (action.type === "done") {
+      console.log(`Minion ${minion.name} did no action`);
+    }
+  };
+
+  // ★★ ตรวจสอบว่าเทิร์นหมดหรือไม่ แล้วคำนวณผู้ชนะ
+  useEffect(() => {
+    if (remainingTurns <= 0) {
+      const greenMinionCount = greenHexes.reduce((acc, hex) => acc + hex.minions.length, 0);
+      const redMinionCount = redHexes.reduce((acc, hex) => acc + hex.minions.length, 0);
+      const winner = calculateWinner({
+        greenMinions: greenMinionCount,
+        redMinions: redMinionCount,
+        greenBudget: greenCoin,
+        redBudget: redCoin,
+        initHp: param_init_hp,
+      });
+      router.push(`/congratulations?winner=${winner}`);
+    }
+  }, [remainingTurns, greenHexes, redHexes, greenCoin, redCoin, param_init_hp, router]);
+
   return (
     <div className="relative w-full h-screen bg-[url('/public/background.png')] bg-cover bg-center flex items-center justify-center">
+      
+      {/* ★★ เรียก MinionActions สำหรับแต่ละมินเนี่ยน */}
+      {minions.map((m) => (
+        <MinionActions
+          key={m.minionId}
+          strategy={m.strategy}
+          gameState={gameState}
+          onAction={(action) => handleMinionAction(action, m)}
+        />
+      ))}
 
       {/* ปุ่ม Show Info */}
       <button
@@ -257,20 +304,13 @@ const Page = () => {
           top: "20px",
           left: "30px",
           ...(currentTurn === "green" ? playerGreenStyle : bloomingRedStyle),
-          backgroundImage:
-            currentTurn === "green"
-              ? "url('/playerRed.png')"
-              : "url('/BloomingGreen.png')",
+          backgroundImage: currentTurn === "green" ? "url('/playerRed.png')" : "url('/BloomingGreen.png')",
         }}
       >
         {currentTurn === "green" && (
           <motion.span
             className="absolute text-2xl font-bold"
-            style={{
-              top: "18px",
-              left: "110px",
-              color: "#362C22",
-            }}
+            style={{ top: "18px", left: "110px", color: "#362C22" }}
           >
             Player 1
           </motion.span>
@@ -288,20 +328,13 @@ const Page = () => {
           bottom: "20px",
           right: "30px",
           ...(currentTurn === "red" ? playerRedStyle : bloomingGreenStyle),
-          backgroundImage:
-            currentTurn === "red"
-              ? "url('/playerGreen.png')"
-              : "url('/BloomingRed.png')",
+          backgroundImage: currentTurn === "red" ? "url('/playerGreen.png')" : "url('/BloomingRed.png')",
         }}
       >
         {currentTurn === "red" && (
           <motion.span
             className="absolute text-2xl font-bold"
-            style={{
-              top: "19px",
-              left: "60px",
-              color: "#362C22",
-            }}
+            style={{ top: "19px", left: "60px", color: "#362C22" }}
           >
             Player 2
           </motion.span>
@@ -335,9 +368,7 @@ const Page = () => {
           <img
             src="/SandTime.png"
             alt="Turn Timer"
-            className={`w-[100px] h-[100px] ${
-              remainingTurns <= 0 ? "opacity-50" : "opacity-100 hover:opacity-80"
-            }`}
+            className={`w-[100px] h-[100px] ${remainingTurns <= 0 ? "opacity-50" : "opacity-100 hover:opacity-80"}`}
           />
         </button>
       </div>
@@ -356,7 +387,6 @@ const Page = () => {
         onClose={closeMinionsCard}
         minionCount={minionCount}
         minionNames={minions.map((m) => m.name)}
-        // ⭐ เมื่อกดปุ่ม Buy สีดำบนการ์ด => handleBuyMinion
         onBuyMinion={handleBuyMinion}
       />
 
