@@ -41,10 +41,10 @@ You should see something like this
 
 ## BackEnd Setup Guide
 ### Installation
-1. go to frontend directory
-   ```sh
-   cd BackEnd
-   ```
+go to frontend directory
+```sh
+cd BackEnd
+```
 ### Running the Development Server
 
 ```sh
