@@ -221,12 +221,15 @@ const Page = () => {
       setCanAct(true);
       setLocked(false);
 
-      const interestBase = 10;
+      // คำนวณหมายเลขเทิร์นปัจจุบัน (nowTurn = max_turns - remainingTurns + 1)
+      const nowTurn = param_max_turns - remainingTurns + 1;
+
       if (currentTurn === "green") {
         setGreenCoin((prev) => {
           let newBudget = prev + param_turn_budget;
+          // คำนวณดอกเบี้ยโดยใช้สูตร (param_interest_pct/100 * log10(playerBudget) * nowTurn) + TurnBudget
           const interest = Math.floor(
-            param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+            (param_interest_pct / 100) * Math.log10(prev > 0 ? prev : 1) * nowTurn
           );
           newBudget += interest;
           newBudget = Math.min(newBudget, param_max_budget);
@@ -236,7 +239,7 @@ const Page = () => {
         setRedCoin((prev) => {
           let newBudget = prev + param_turn_budget;
           const interest = Math.floor(
-            param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+            (param_interest_pct / 100) * Math.log10(prev > 0 ? prev : 1) * nowTurn
           );
           newBudget += interest;
           newBudget = Math.min(newBudget, param_max_budget);
@@ -252,7 +255,7 @@ const Page = () => {
   const openMinionsCard = () => setShowMinionsCard(true);
   const closeMinionsCard = () => setShowMinionsCard(false);
 
-  // ซื้อ Minion
+  // ซื้อ Minion (และหักเงินตามค่า spawn_cost)
   const handleBuyMinion = (minionName: string) => {
     if (!selectedHexForMinion) return;
     const found = minions.find((m) => m.name === minionName);
@@ -279,6 +282,12 @@ const Page = () => {
               : hex
           )
         );
+      }
+      // หักเงินตามค่า spawn_cost ที่ตั้งไว้
+      if (currentTurn === "green") {
+        deductGreenCoin(param_spawn_cost);
+      } else {
+        deductRedCoin(param_spawn_cost);
       }
     }
     setSelectedHexForMinion(null);
