@@ -174,7 +174,22 @@ public class GameState {
                         if(!buyHexPerTurn) System.out.println("You already buy hex this turn");
                         else if(!haveEnoughMoney(currentPlayer.getBudget(),config.getHexPurchaseCost())) System.out.println("U R too POOR");
                         else{
-                            targetHex = getRowAndCol("");
+
+                            for (Map.Entry<Integer, Hex> entry : NearbySet.entrySet()) {
+                                System.out.println((entry.getKey()+1) + ") [" + entry.getValue().getRow() + "," + entry.getValue().getCol() + "]");
+                            }
+
+                            int hexChoice = 1;
+                            while(true) {
+                                System.out.print("Select hex to purchase:");
+                                hexChoice = Choice.nextInt();
+                                hexChoice--;
+                                if (NearbySet.containsKey(hexChoice)) break;
+                                else System.out.println("Invalid selection. Try again:");
+                            }
+
+                            Hex selectedHex = NearbySet.get(hexChoice);
+                            targetHex = new int[]{selectedHex.getRow(), selectedHex.getCol()};
                             buyHex(targetHex);
 
                             if (gameBoard[targetHex[0]][targetHex[1]].getOwnerName() == currentPlayer.getPlayerNumber()) {
@@ -220,26 +235,34 @@ public class GameState {
                     }
 
                     else if(playerChoice == 4){
-                        int[] nearEnemy;
+                        int nearEnemy = 0;
                         targetHex   = getRowAndCol("minion now");
                         if(!gameBoard[targetHex[0]][targetHex[1]].hasMinion()||gameBoard[targetHex[0]][targetHex[1]].getMinion().getOwnerName()!= currentPlayer.getPlayerNumber())
                             System.out.println("You don't have your minion in this hex");
                         else{
-                            nearEnemy = findNearbyEnemy(1,targetHex);
+                            targetHex = getRowAndCol("");
+                            int directionChoice = 1;
+                            boolean choosing = true;
+                            while(choosing) {
+                                System.out.println("Select minion");
+                                for(int i=0;i<minionTypeAmount;i++) System.out.println((i+1)+") "+MinionType[i].getMinionName());
+                                directionChoice = Choice.nextInt();
 
-                            if(nearEnemy[0] == 0) System.out.println("dont have enemy");
+                                if(directionChoice>minionTypeAmount || directionChoice<1) System.out.println("Invalid value");
+                                else choosing = false;
+                            }
+
+                            if(nearEnemy == 0) System.out.println("dont have enemy");
                             else{
                                 String targetDirection="";
-                                if(nearEnemy[0] == 1) targetDirection = "up";
-                                else if(nearEnemy[0] == 2) targetDirection = "upright";
-                                else if(nearEnemy[0] == 3) targetDirection = "downright";
-                                else if(nearEnemy[0] == 4) targetDirection = "down";
-                                else if(nearEnemy[0] == 5) targetDirection = "downleft";
-                                else if(nearEnemy[0] == 6) targetDirection = "upleft";
+                                if(directionChoice == 1) targetDirection = "up";
+                                else if(directionChoice == 2) targetDirection = "upright";
+                                else if(directionChoice == 3) targetDirection = "downright";
+                                else if(directionChoice == 4) targetDirection = "down";
+                                else if(directionChoice == 5) targetDirection = "downleft";
+                                else if(directionChoice == 6) targetDirection = "upleft";
 
-                                System.out.print("Nearby enemy is " + targetDirection + " " + nearEnemy[3] +" Hex(es) with HP: ");
-                                for(int i = 0; i < nearEnemy[1]; i++) System.out.print("x");
-                                System.out.print("/" + config.getInitHP() + " and DEF " + nearEnemy[2]);
+                                System.out.print("Nearby enemy is " + targetDirection + " " + nearEnemy);
                             }
                         }
                     }
@@ -372,151 +395,73 @@ public class GameState {
         }
     }
 
-    //หาลำดับความใกล้แบบตามเข็มนาฬิกา
-    public int[] findNearbyEnemy(int targetType,int[] minionHex) {
-        String  minionOwnerTarget=""; //targetType = 1 หาศัตรู, -1 หาพันธมิตร
-        int[]   direction = new int[]{0,0,0,8}; //0 = direction[1 = up, 2 = upright, 3 = downright, 4 = down, 5 = downleft, 6 = upleft]; 1 = range; 2 = hp;
+    private int nearbyUp(int[] targetHex,String target){
+        int nearby = 0;
 
-        if(targetType == 1){
-            if(currentPlayer.getPlayerNumber() == "001")    minionOwnerTarget = "002";
-            else if(currentPlayer.getPlayerNumber() == "002")    minionOwnerTarget = "001";
-        }
-        else if(targetType == -1) minionOwnerTarget = currentPlayer.getPlayerNumber();
-
-        int[] nearestTarget;
-        //up
-
-        nearestTarget = up(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0) direction = nearestTarget;
-        if(direction[0] == 1 && direction[3] == 1) return direction;
-
-        //upright
-        nearestTarget = upright(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0 && nearestTarget[3] < direction[3]) direction = nearestTarget;
-        if(direction[0] == 2 && direction[3] == 1) return direction;
-
-        //downright
-        nearestTarget = downright(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0 && nearestTarget[3] < direction[3]) direction = nearestTarget;
-        if(direction[0] == 3 && direction[3] == 1) return direction;
-
-        //down
-        nearestTarget = down(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0 && nearestTarget[3] < direction[3]) direction = nearestTarget;
-        if(direction[0] == 4 && direction[3] == 1) return direction;
-
-        //downleft
-        nearestTarget = downleft(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0 && nearestTarget[3] < direction[3]) direction = nearestTarget;
-        if(direction[0] == 5 && direction[3] == 1) return direction;
-
-        //upleft
-        nearestTarget = upleft(minionHex,minionOwnerTarget);
-        if(nearestTarget[0] != 0 && nearestTarget[3] < direction[3]) direction = nearestTarget;
-
-        if(direction[0] == 0) direction[3] = 0;
-        return direction;
-    }
-
-    private int[] up(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
-
-        for(int i = 0; i < targetHex[0]; i++){
-            if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
-                direction[0] = 1;
-
-                boolean x = true;
-                int hp = gameBoard[i][targetHex[1]].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
+        if(targetHex[0]==0) return nearby;
+        else{
+            for(int i = targetHex[0]-1 ; i >=0 ; i--){
+                if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
+                    nearby += 100 * getDigit(gameBoard[i][targetHex[1]].getMinion().getMinionNowHP());
+                    nearby += 10 * getDigit(gameBoard[i][targetHex[1]].getMinion().getMinionDEF());
+                    nearby += targetHex[0]-i;
+                    return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
                 }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ? gameBoard[i][targetHex[1]].getMinion().getMinionDEF() : -gameBoard[i][targetHex[1]].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ? targetHex[0] - i : -(targetHex[0] - i);
             }
         }
-
-        return direction;
+        return nearby;
     }
-    private int[] upright(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
+
+    private int nearbyUpRight(int[] targetHex,String target){
+        int nearby = 0;
 
         boolean isEven = targetHex[1] % 2 == 0;
-        if(targetHex[1] == 7 || (targetHex[0] == 0 && !isEven) ) return direction;
+        if(targetHex[1] == 7 || (targetHex[0] == 0 && !isEven) ) return nearby ;
 
         int row = isEven ?  targetHex[0] : targetHex[0]-1;
         int col = targetHex[1]+1;
         isEven = col % 2 == 0;
 
-        if(col == 7 || (row == 0 && !isEven) ) return direction;
-
         boolean looping = true;
         boolean wait = true;
         while(looping){
             if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
-                direction[0] = 2;
-
-                boolean x = true;
-                int hp = gameBoard[row][col].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
+                if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
+                    nearby += 100 * getDigit(gameBoard[row][col].getMinion().getMinionNowHP());
+                    nearby += 10 * getDigit(gameBoard[row][col].getMinion().getMinionDEF());
+                    nearby += col - targetHex[1];
+                    return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
                 }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? gameBoard[row][col].getMinion().getMinionDEF() : - gameBoard[row][col].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? col - targetHex[1] : -( col - targetHex[1]);
-                break;
             }
             else{
                 if (!isEven && row > 0) row--;
                 col++;
                 isEven = col % 2 == 0;
             }
-
             if(!wait) looping = false;
             if(col == 7 || (row == 0 && !isEven) ) wait = false;
         }
-
-        return direction;
+        return nearby ;
     }
-    private int[] downright(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
+
+    private int nearbyDownRight(int[] targetHex,String target){
+        int nearby = 0;
 
         boolean isEven = targetHex[1] % 2 == 0;
-        if(targetHex[1] == 7 || (targetHex[0] == 7 && isEven) ) return direction;
+        if(targetHex[1] == 7 || (targetHex[0] == 7 && isEven) ) return nearby;
 
         int row = isEven ?  targetHex[0]+1 : targetHex[0];
         int col = targetHex[1]+1;
         isEven = col % 2 == 0;
 
-        if(col == 7 || (row == 7 && isEven) ) return direction;
-
         boolean looping = true;
         boolean wait = true;
         while(looping){
             if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
-                direction[0] = 3;
-
-                boolean x = true;
-                int hp = gameBoard[row][col].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
-                }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? gameBoard[row][col].getMinion().getMinionDEF() : - gameBoard[row][col].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? col - targetHex[1] : -( col - targetHex[1]);
-                break;
+                nearby += 100 * getDigit(gameBoard[row][col].getMinion().getMinionNowHP());
+                nearby += 10 * getDigit(gameBoard[row][col].getMinion().getMinionDEF());
+                nearby += col - targetHex[1];
+                return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
             }
             else{
                 if (isEven && row < 7) row++;
@@ -527,107 +472,71 @@ public class GameState {
             if(col == 7 || (row == 7 && isEven)) wait = false;
         }
 
-        return direction;
+        return nearby;
     }
-    private int[] down(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
+    private int nearbyDown(int[] targetHex,String target){
+        int nearby = 0;
 
-        for(int i = 7; i > targetHex[0]; i--){
-            if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
-                direction[0] = 4;
-
-                boolean x = true;
-                int hp = gameBoard[i][targetHex[1]].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
+        if(targetHex[0]==7) return nearby;
+        else{
+            for(int i = targetHex[0]+1 ; i <= 7 ; i++){
+                if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
+                    nearby += 100 * getDigit(gameBoard[i][targetHex[1]].getMinion().getMinionNowHP());
+                    nearby += 10 * getDigit(gameBoard[i][targetHex[1]].getMinion().getMinionDEF());
+                    nearby += targetHex[0]-i;
+                    return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
                 }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ? gameBoard[i][targetHex[1]].getMinion().getMinionDEF() : -gameBoard[i][targetHex[1]].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[i][targetHex[1]].getMinion().getOwnerName() ? i-targetHex[0] : -(i-targetHex[0]);
             }
         }
-
-        return direction;
+        return nearby;
     }
-    private int[] downleft(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
+    private int nearbyDownLeft(int[] targetHex,String target){
+        int nearby = 0;
 
         boolean isEven = targetHex[1] % 2 == 0;
-        if(targetHex[1] == 0 || (targetHex[0] == 7 && isEven) ) return direction;
+        if(targetHex[1] == 0 || (targetHex[0] == 7 && isEven) ) return nearby;
 
         int row = isEven ?  targetHex[0]+1 : targetHex[0];
         int col = targetHex[1]-1;
         isEven = col % 2 == 0;
 
-        if(col == 0 || (row == 7 && isEven) ) return direction;
-
         boolean looping = true;
         boolean wait = true;
         while(looping){
             if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
-                direction[0] = 5;
-
-                boolean x = true;
-                int hp = gameBoard[row][col].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
-                }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? gameBoard[row][col].getMinion().getMinionDEF() : - gameBoard[row][col].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? targetHex[1] - col : -(targetHex[1] - col);
-                break;
+                nearby += 100 * getDigit(gameBoard[row][col].getMinion().getMinionNowHP());
+                nearby += 10 * getDigit(gameBoard[row][col].getMinion().getMinionDEF());
+                nearby += targetHex[1] - col;
+                return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
             }
             else{
                 if (isEven && row < 7) row++;
                 col--;
                 isEven = col % 2 == 0;
             }
-
             if(!wait) looping = false;
             if(col == 0 || (row == 7 && isEven)) wait = false;
         }
-
-        return direction;
+        return nearby;
     }
-    private int[] upleft(int[] targetHex,String target){
-        int[] direction = new int[]{0,0,0,0};
+    private int nearbyUpLeft(int[] targetHex,String target){
+        int nearby = 0;
 
         boolean isEven = targetHex[1] % 2 == 0;
-        if(targetHex[1] == 0 || (targetHex[0] == 0 && !isEven) ) return direction;
+        if(targetHex[1] == 0 || (targetHex[0] == 0 && !isEven) ) return nearby;
 
         int row = !isEven ?  targetHex[0]-1 : targetHex[0];
         int col = targetHex[1]-1;
         isEven = col % 2 == 0;
 
-        if(col == 0 || (row == 0 && !isEven) ) return direction;
-
         boolean looping = true;
         boolean wait = true;
         while(looping){
             if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
-                direction[0] = 6;
-
-                boolean x = true;
-                int hp = gameBoard[row][col].getMinion().getMinionNowHP(),count = 0;
-                while(x){
-                    hp = (hp - (hp%10))/10;
-                    count++;
-
-                    if(hp == 0) x = false;
-                }
-
-                direction[1] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ?  count : -count;
-                direction[2] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? gameBoard[row][col].getMinion().getMinionDEF() : - gameBoard[row][col].getMinion().getMinionDEF() ;
-                direction[3] = currentPlayer.getPlayerNumber() != gameBoard[row][col].getMinion().getOwnerName() ? targetHex[1] - col : -(targetHex[1] - col);
-                break;
+                nearby += 100 * getDigit(gameBoard[row][col].getMinion().getMinionNowHP());
+                nearby += 10 * getDigit(gameBoard[row][col].getMinion().getMinionDEF());
+                nearby += targetHex[1] - col;
+                return target != currentPlayer.getPlayerNumber() ? nearby : -nearby ;
             }
             else{
                 if (!isEven && row > 0) row--;
@@ -639,7 +548,7 @@ public class GameState {
             if(col == 0 || (row == 0 && !isEven)) wait = false;
         }
 
-        return direction;
+        return nearby;
     }
 
     private void attackEnemy(int[] targetHex,int[] allyHexCoor,int paymentATK){
@@ -693,7 +602,6 @@ public class GameState {
 
         return HexCoordinate;
     }
-
 
     /** สำหรับ check ผลแพ้ชนะโดยอิงจากจำนวนมินเนี่ยนก่อนเช็คด้วยผลเลือดรวม
      *  ตอนนี้ยังเป็นแบบคร่าวๆสำหรับไว้ดูผ่าน Terminal อยู่
@@ -755,6 +663,20 @@ public class GameState {
      * */
     private static double GetMoreMoney(int Interest,long playerBudget,int nowTurn,int TurnBudget){
         return  (((double) Interest /100*log10(playerBudget)*nowTurn)+TurnBudget);
+    }
+
+    //เช็คจำนวนหลัก
+    private int getDigit(int Num){
+        boolean x = true;
+        int count = 0;
+        while(x){
+            Num = (Num - (Num%10))/10;
+            count++;
+
+            if(Num == 0) x = false;
+        }
+
+        return count;
     }
 
     /** สำหรับแสดงกระดานเพื่อดูแต่ละช่องผ่าน Terminal โดยพยายามให้ใกล้เคียงตารางช่องหกเหลี่ยมที่สุด
