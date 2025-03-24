@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-// ---------- Interfaces สำหรับข้อมูลเกมและ Action ----------
+// ---------- Interfaces ----------
 
 export interface GameState {
   budget: number;
@@ -17,45 +17,52 @@ export interface Action {
   type: ActionType;
   direction?: string;
   cost?: number;
-  // สมมติว่าถ้าฝั่ง backend ส่งกลับพิกัดใหม่
   newPosition?: string;
 }
 
-// ---------- ฟังก์ชันเรียก API เพื่อ parse strategy ด้วย Java parser + GameState ----------
+// ---------- Fetch strategy from backend ----------
+
 async function parseStrategy(strategy: string, gameState: GameState): Promise<Action[]> {
-  // เปลี่ยนจาก "/api/parseStrategy" เป็น "http://localhost:8080/api/parseStrategy"
-  // เพื่อชี้ไปที่ Spring Boot (ซึ่งรันบนพอร์ต 8080)
+  console.log("Attempt to fetch =>", strategy, gameState);
+
   const response = await fetch("http://localhost:8080/api/parseStrategy", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ strategy, gameState }),
   });
 
+  console.log("fetch done => status =", response.status);
+
   if (!response.ok) {
     throw new Error("Failed to parse strategy");
   }
 
   const data = await response.json();
-  // สมมติว่า API ส่งกลับ { actions: Action[] }
   return data.actions as Action[];
 }
 
-// ---------- Hook useStrategy ----------
-//
-// รับ strategy string และ gameState
-// จากนั้นเรียก parser ผ่าน API เพื่อให้ backend ประมวลผล
-// ส่งกลับ action list
-//
-export function useStrategy(strategy: string, gameState: GameState): Action[] {
+// ---------- useStrategy Hook (with callback) ----------
+
+/**
+ * @param strategy - string เช่น "move up"
+ * @param gameState - สถานะของเกม
+ * @param onActionsReady - callback ที่จะถูกเรียกเมื่อได้ actions กลับจาก backend
+ */
+export function useStrategy(
+  strategy: string,
+  gameState: GameState,
+  onActionsReady?: (actions: Action[]) => void
+): Action[] {
   const [actions, setActions] = useState<Action[]>([]);
 
   useEffect(() => {
-    // เพิ่ม console.log เพื่อตรวจสอบว่า useStrategy ถูกเรียกจริงหรือไม่
     console.log("useStrategy called with strategy =", strategy);
-
     parseStrategy(strategy, gameState)
       .then((parsedActions) => {
         setActions(parsedActions);
+        if (onActionsReady) {
+          onActionsReady(parsedActions); // ✅ เรียก callback ส่งกลับ
+        }
       })
       .catch((error) => {
         console.error("Error parsing strategy:", error);

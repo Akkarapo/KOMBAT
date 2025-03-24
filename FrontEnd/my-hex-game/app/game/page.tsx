@@ -13,11 +13,11 @@ import MinionStrategyInformation from "./minionStrategyInformation";
 import { initialGreenHexes, GreenHexData } from "../../components/dataGreen";
 import { initialRedHexes, RedHexData } from "../../components/dataRed";
 
-// ---- เพิ่ม import MinionActions, Action, GameState ----
+// ---- ใช้ hook useStrategy จาก useStrategy เท่านั้น (ไม่ต้อง import parseStrategy) ----
 import MinionActions from "../choose-strategy/minionActions";
-import { Action, GameState } from "../choose-strategy/useStrategy";
+import { Action, GameState, useStrategy } from "../choose-strategy/useStrategy";
 
-import MoreButtonPopUp from "../game/moreButtonPopUp"; // ถ้าคุณมีปุ่ม More
+import MoreButtonPopUp from "../game/moreButtonPopUp"; // ถ้ามีปุ่ม More
 
 // ---------- ตัวแปร style สำหรับ Player / Blooming ----------
 const playerRedStyle = {
@@ -151,7 +151,6 @@ function calcNewPosition(oldRow: number, oldCol: number, direction: string): { r
       newRow = oldRow - 1;
       break;
     default:
-      // ไม่ขยับ
       break;
   }
   return { row: newRow, col: newCol };
@@ -160,7 +159,7 @@ function calcNewPosition(oldRow: number, oldCol: number, direction: string): { r
 const Page = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { minions } = useUserStrategy(); // MinionData[] (มี field strategy ด้วย)
+  const { minions } = useUserStrategy(); // MinionData[]
 
   // ค่า config ต่าง ๆ
   const param_spawn_cost = parseInt(searchParams.get("spawn_cost") || "50", 10);
@@ -223,7 +222,6 @@ const Page = () => {
       setCanAct(true);
       setLocked(false);
 
-      // คำนวณเทิร์นปัจจุบัน
       const nowTurn = param_max_turns - remainingTurns + 1;
 
       if (currentTurn === "green") {
@@ -247,8 +245,6 @@ const Page = () => {
           return newBudget;
         });
       }
-
-      // สลับเทิร์น
       setCurrentTurn((prev) => (prev === "green" ? "red" : "green"));
     }
   };
@@ -261,11 +257,8 @@ const Page = () => {
   // เมื่อกดปุ่ม Buy สีดำบนการ์ด
   const handleBuyMinion = (minionName: string) => {
     if (!selectedHexForMinion) return;
-
-    // หา minionId จาก context
     const found = minions.find((m) => m.name === minionName);
     if (found) {
-      // ใส่มินเนี่ยนลงใน Hex นั้น
       if (currentTurn === "green") {
         setGreenHexes((prev) =>
           prev.map((hex) =>
@@ -292,8 +285,6 @@ const Page = () => {
         deductRedCoin(param_spawn_cost);
       }
     }
-
-    // ปิด popup + เคลียร์
     setSelectedHexForMinion(null);
     setShowMinionsCard(false);
   };
@@ -316,28 +307,25 @@ const Page = () => {
     setShowInfoPopup(true);
   };
 
-  // สร้าง object gameState สำหรับเรียก useStrategy
+  // สร้าง object gameState สำหรับส่งให้ MinionActions
   const gameState: GameState = {
     budget: currentTurn === "green" ? greenCoin : redCoin,
     opponentLoc: 42,
-    // ค่าตัวอย่าง nearby, random
     nearby: { up: 1, down: 2, upleft: 1, upright: 1, downleft: 2, downright: 2 },
     random: Math.floor(Math.random() * 100),
   };
 
-  // ฟังก์ชันจัดการ action (move/shoot/done)
+  // ฟังก์ชันจัดการ action จาก MinionActions
   const handleMinionAction = (action: Action, minion: MinionData) => {
     if (action.type === "move") {
       console.log(`Minion ${minion.name} => move: ${action.direction}`);
       if (action.direction) {
-        // ย้าย
         const oldKey = findHexKeyOfMinion(minion, currentTurn, greenHexes, redHexes);
         if (!oldKey) return;
         const { row: oldRow, col: oldCol } = parseKey(oldKey);
         const { row: newRow, col: newCol } = calcNewPosition(oldRow, oldCol, action.direction);
         const newKey = buildKey(newRow, newCol);
 
-        // เช็คขอบเขต (เช่น 1..8)
         if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
           console.log("Move out of range => cancel");
           return;
@@ -381,13 +369,13 @@ const Page = () => {
       }
     } else if (action.type === "shoot") {
       console.log(`Minion ${minion.name} => shoot: ${action.direction}, cost=${action.cost}`);
-      // TODO: ยิง/หัก coin
+      // TODO: ดำเนินการยิงและหักเงินตาม cost
     } else {
       console.log(`Minion ${minion.name} => done`);
     }
   };
 
-  // เช็คเทิร์นหมด => ประกาศผู้ชนะ
+  // เช็คว่าเทิร์นหมดแล้วหรือไม่ ถ้าเทิร์นหมด คำนวณผู้ชนะและเปลี่ยนหน้า
   useEffect(() => {
     if (remainingTurns <= 0) {
       const greenMinionCount = greenHexes.reduce((acc, hex) => acc + hex.minions.length, 0);
@@ -405,11 +393,11 @@ const Page = () => {
 
   return (
     <div className="relative w-full h-screen bg-[url('/background.png')] bg-cover bg-center flex items-center justify-center">
-      {/* เรียก MinionActions สำหรับแต่ละมินเนี่ยน (strategy != "") */}
+      {/* ประมวลผล strategy ของมินเนี่ยนแต่ละตัว */}
       {minions.map((m) => (
         <MinionActions
           key={m.minionId}
-          strategy={m.strategy}       // ตรงนี้ส่ง string strategy ของมินเนี่ยน
+          strategy={m.strategy} 
           gameState={gameState}
           onAction={(action) => handleMinionAction(action, m)}
         />
@@ -491,7 +479,7 @@ const Page = () => {
         )}
       </motion.div>
 
-      {/* HexGrid ตรงกลาง */}
+      {/* HexGrid */}
       <div className="relative w-[800px] h-[800px] flex items-center justify-center top-[100px] right-[-150px]">
         <HexGrid
           hexPurchaseCost={param_hex_purchase_cost}
@@ -511,7 +499,7 @@ const Page = () => {
         />
       </div>
 
-      {/* Turns Counter + ปุ่มเปลี่ยนเทิร์น */}
+      {/* Turns Counter */}
       <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
         <div className="text-4xl font-bold text-black">{remainingTurns}</div>
         <button onClick={handleAction} disabled={remainingTurns <= 0}>
@@ -526,10 +514,7 @@ const Page = () => {
       </div>
 
       {/* Coin Display */}
-      <div
-        className="relative right-30 bottom-72 flex items-center top-[100px] right-[-240px]"
-        style={{ gap: "10px" }}
-      >
+      <div className="relative right-30 bottom-72 flex items-center top-[100px] right-[-240px]" style={{ gap: "10px" }}>
         <span className="text-gray-700 text-2xl font-bold">
           {currentTurn === "green" ? greenCoin : redCoin}
         </span>
@@ -561,7 +546,7 @@ const Page = () => {
         />
       )}
 
-      {/* ปุ่ม More (ถ้ามี) */}
+      {/* ปุ่ม More */}
       <MoreButtonPopUp />
     </div>
   );
