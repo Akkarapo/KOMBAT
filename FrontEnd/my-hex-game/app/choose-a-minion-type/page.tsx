@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import AutoSetting from "./autoSetting";
 
-// ไอคอนสำหรับกลยุทธ์ (รวม Strategy 3)
+// ไอคอนกลยุทธ์ (รวม Strategy 3)
 const strategyIcons: Record<string, string> = {
   "Strategy 1": "/Strategy1Icon.png",
   "Strategy 2": "/Strategy2Icon.png",
@@ -13,15 +13,13 @@ const strategyIcons: Record<string, string> = {
 };
 
 // ฟังก์ชัน parseStrategyName
-// ถ้าเป็น "Strategy 3||..." => คืน "Strategy 3"
-// ถ้าเป็น "Strategy 1||..." => ก็คืน "Strategy 1"
-// ถ้าเป็น "Strategy 2||..." => ก็คืน "Strategy 2"
-// (บางครั้งเรา encode โค้ดในรูป "Strategy 1||...")
-function parseStrategyName(str: string): string {
-  if (str.startsWith("Strategy 3||")) return "Strategy 3";
-  if (str.startsWith("Strategy 1||")) return "Strategy 1";
-  if (str.startsWith("Strategy 2||")) return "Strategy 2";
-  return str; // เผื่อเป็น "Strategy 1" / "Strategy 2" เฉย ๆ
+// ถ้าเป็น "Strategy X||..." => แยกออกเฉพาะชื่อ Strategy
+function parseStrategyName(fullStr: string): string {
+  if (fullStr.includes("||")) {
+    const [name] = fullStr.split("||");
+    return name.trim();
+  }
+  return fullStr;
 }
 
 const autoDefense: Record<number, number[]> = {
@@ -57,7 +55,7 @@ const ChooseMinionType: React.FC = () => {
     return 1;
   });
 
-  // 2) สร้าง state เก็บข้อมูล Minion ทั้งหมด
+  // 2) state minionData
   const [minionData, setMinionData] = useState<
     { name: string; defense: string; strategy: string }[]
   >(
@@ -68,7 +66,7 @@ const ChooseMinionType: React.FC = () => {
     }))
   );
 
-  // 3) index ของมินเนี่ยนที่เลือก
+  // 3) index ของ minion ที่เลือก
   const [selected, setSelected] = useState<number>(0);
 
   // 4) บันทึก count ลง localStorage
@@ -76,19 +74,18 @@ const ChooseMinionType: React.FC = () => {
     localStorage.setItem("minionCount", count.toString());
   }, [count]);
 
-  // 5) อ่านค่า defenseData จาก URL เมื่อเปิดหน้านี้
+  // 5) อ่านค่า defenseData จาก URL
   useEffect(() => {
     const fromQuery = searchParams.get("defenseData");
     if (fromQuery) {
       const parts = fromQuery.split(",");
       const newData: { name: string; defense: string; strategy: string }[] = [];
-
       for (let i = 0; i < parts.length; i++) {
         const [idxStr, nameEncoded, defense, strategy] = parts[i].split(":");
         newData.push({
           name: decodeURIComponent(nameEncoded),
           defense,
-          strategy, // อาจเป็น "Strategy 1||encoded", "Strategy 3||encoded", หรือ "Strategy 1"
+          strategy, // อาจเป็น "Strategy 1||...", "Strategy 3||..."
         });
       }
       setMinionData(newData);
@@ -137,7 +134,6 @@ const ChooseMinionType: React.FC = () => {
           `${i + 1}:${encodeURIComponent(m.name)}:${m.defense}:${m.strategy}`
       )
       .join(",");
-
     const params = new URLSearchParams();
     params.set("count", count.toString());
     params.set("defenseData", defenseData);
@@ -173,7 +169,7 @@ const ChooseMinionType: React.FC = () => {
     router.push("/pageMenu");
   };
 
-  // ปุ่ม Choose Strategy
+  // Choose Strategy
   const handleChooseStrategy = () => {
     const minionIndex = selected + 1;
     const defenseData = minionData
@@ -283,7 +279,6 @@ const ChooseMinionType: React.FC = () => {
             transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
             className="absolute top-[0px] left-[520px] w-[120px] h-[120px] bg-contain bg-no-repeat"
             style={{
-              // parse เพื่อดึงชื่อ Strategy
               backgroundImage: `url("${
                 strategyIcons[parseStrategyName(minionData[selected]?.strategy)] ||
                 "/ChooseAstrategy.png"
