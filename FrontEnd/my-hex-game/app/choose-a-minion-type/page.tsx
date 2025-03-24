@@ -8,7 +8,7 @@ import AutoSetting from "./autoSetting";
 // ไอคอนสำหรับกลยุทธ์ (ถ้ามีการตั้งค่า strategy แล้วจะเปลี่ยนรูป)
 const strategyIcons: Record<string, string> = {
   "Strategy 1": "/Strategy1Icon.png",
-  "Strategy 2": "/Strategy2Icon.png"
+  "Strategy 2": "/Strategy2Icon.png",
 };
 
 // ตารางค่าป้องกัน (defense) สำหรับการสุ่ม
@@ -66,8 +66,7 @@ const ChooseMinionType: React.FC = () => {
     localStorage.setItem("minionCount", count.toString());
   }, [count]);
 
-  // 5) ถ้าต้องการ "อ่านค่า defenseData จาก URL" เมื่อเข้าหน้านี้ครั้งแรก
-  //    ก็สามารถทำใน useEffect แบบด้านล่าง
+  // 5) อ่านค่า defenseData จาก URL เมื่อเข้าหน้านี้ครั้งแรก
   useEffect(() => {
     const fromQuery = searchParams.get("defenseData");
     if (fromQuery) {
@@ -119,7 +118,8 @@ const ChooseMinionType: React.FC = () => {
     const newData = [...minionData];
     autoDefense[count].forEach((def, i) => {
       const name = autoNames[count][i];
-      const randomStrategy = allStrategies[Math.floor(Math.random() * allStrategies.length)];
+      const randomStrategy =
+        allStrategies[Math.floor(Math.random() * allStrategies.length)];
       newData[i] = {
         name,
         defense: def.toString(),
@@ -148,7 +148,10 @@ const ChooseMinionType: React.FC = () => {
   const handleConfirm = () => {
     // ตรวจสอบว่ากรอกครบหรือยัง
     const incompleteIndex = minionData.findIndex(
-      (m) => m.name.trim() === "" || m.defense.trim() === "" || m.strategy.trim() === ""
+      (m) =>
+        m.name.trim() === "" ||
+        m.defense.trim() === "" ||
+        m.strategy.trim() === ""
     );
     if (incompleteIndex !== -1) {
       setSelected(incompleteIndex);
@@ -168,6 +171,11 @@ const ChooseMinionType: React.FC = () => {
   // ปุ่ม Back
   const handleGoToMenu = () => {
     router.push("/choose-minions");
+  };
+
+  // ปุ่ม Home (ไปที่ /pageMenu)
+  const handleHome = () => {
+    router.push("/pageMenu");
   };
 
   // ปุ่ม Choose Strategy
@@ -266,7 +274,7 @@ const ChooseMinionType: React.FC = () => {
             />
           </div>
 
-          {/* ปุ่มเลือก Strategy (ถ้าอยากเปลี่ยนเองแบบกำหนด) */}
+          {/* ปุ่มเลือก Strategy */}
           <motion.button
             onClick={handleChooseStrategy}
             whileHover={{ scale: 1.1 }}
@@ -297,7 +305,19 @@ const ChooseMinionType: React.FC = () => {
         style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
       />
 
-      {/* ★★ ปุ่ม Auto Setting ★★ */}
+      {/* ปุ่ม Home (อยู่ด้านขวาของปุ่ม Back) */}
+      <motion.button
+        onClick={handleHome}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="absolute bottom-[45px] left-[270px] w-[180px] h-[45px] bg-contain bg-no-repeat"
+        style={{ backgroundImage: "url('/HomeButton.png')", zIndex: 50 }}
+      />
+
+      {/* ปุ่ม Auto Setting */}
       <AutoSetting onAutoFill={handleAutoFill} />
 
       {/* ปุ่ม Confirm */}
