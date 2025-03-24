@@ -408,7 +408,7 @@ const Page = () => {
         onClick={() => setShowInfoPopup(true)}
         className="fixed z-50 w-[180px] h-[60px] bg-contain bg-no-repeat"
         style={{
-          bottom: "100px",
+          bottom: "370px",
           left: "20px",
           backgroundImage: "url('/InfoButton.png')",
         }}
