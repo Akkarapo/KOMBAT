@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "../../components/ui/card";
@@ -28,9 +28,23 @@ const cardVariants = {
 
 // Animation สำหรับกล่อง Strategy
 const panelVariants = {
-  hidden: { opacity: 0, x: -50 }, // กล่องจะเลื่อนมาจากซ้าย
+  hidden: { opacity: 0, x: -50 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
+
+/**
+ * parseStrategyAndCode
+ * ถ้า strat เป็น "Strategy 3||encodedCode" -> return ["Strategy 3", decodeURIComponent(encodedCode)]
+ * ถ้าเป็น "Strategy 1" หรือ "Strategy 2" -> return [strat, strategyData[strat] || ""]
+ */
+function parseStrategyAndCode(strat: string): [string, string] {
+  if (strat.startsWith("Strategy 3||")) {
+    const encoded = strat.replace("Strategy 3||", "");
+    return ["Strategy 3", decodeURIComponent(encoded)];
+  }
+  // ถ้าไม่ใช่ Strategy 3|| => น่าจะเป็น Strategy 1 หรือ 2
+  return [strat, strategyData[strat] || ""];
+}
 
 export default function ChooseStrategy() {
   const router = useRouter();
@@ -43,43 +57,94 @@ export default function ChooseStrategy() {
   // ใช้ context เพื่อเก็บค่า strategy
   const { setStrategy } = useUserStrategy();
 
-  // กำหนดค่าเริ่มต้นสำหรับ strategy
-  const [selectedStrategy, setSelectedStrategy] = useState<string>("Strategy 1");
-  const [customStrategy, setCustomStrategy] = useState<string>(strategyData["Strategy 1"]);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  // ⭐ เก็บ code ของ Strategy 1, 2, 3 แยกกัน เพื่อไม่ให้หายเมื่อสลับคลิก
+  const [codeS1, setCodeS1] = useState(strategyData["Strategy 1"]);
+  const [codeS2, setCodeS2] = useState(strategyData["Strategy 2"]);
+  const [codeS3, setCodeS3] = useState(strategyData["Strategy 3"]);
 
-  // ฟังก์ชันบันทึก Strategy แล้วกลับไปหน้า choose-a-minion-type
-  // โดยอัปเดตค่า defenseData เฉพาะมินเนี่ยนตัวที่ตรงกับ minionId
-  // ถ้าเป็น "Strategy 3" จะเก็บ custom code ลงในช่อง strategy
+  // อันนี้คือ strategy ที่เลือกปัจจุบัน
+  const [selectedStrategy, setSelectedStrategy] = useState<string>("Strategy 1");
+
+  // โหลด strategy ปัจจุบันของ minionId จาก defenseData
+  useEffect(() => {
+    const defenseDataStr = searchParams.get("defenseData") || "";
+    const mId = parseInt(minionId, 10);
+
+    const parts = defenseDataStr.split(",");
+    for (const entry of parts) {
+      const [id, name, defense, strat] = entry.split(":");
+      if (parseInt(id, 10) === mId) {
+        // แยกได้เป็น [strategyName, code]
+        const [sName, sCode] = parseStrategyAndCode(strat);
+
+        // ถ้า sName === "Strategy 1" => set codeS1 เป็น sCode
+        // ถ้า sName === "Strategy 2" => set codeS2 เป็น sCode
+        // ถ้า sName === "Strategy 3" => set codeS3 เป็น sCode
+        if (sName === "Strategy 1") {
+          setSelectedStrategy("Strategy 1");
+          setCodeS1(sCode);
+        } else if (sName === "Strategy 2") {
+          setSelectedStrategy("Strategy 2");
+          setCodeS2(sCode);
+        } else {
+          // Strategy 3
+          setSelectedStrategy("Strategy 3");
+          setCodeS3(sCode);
+        }
+        break;
+      }
+    }
+  }, [searchParams, minionId]);
+
+  // ฟังก์ชัน getCurrentCode: คืน code ของ strategy ที่เลือก
+  const getCurrentCode = (): string => {
+    if (selectedStrategy === "Strategy 1") return codeS1;
+    if (selectedStrategy === "Strategy 2") return codeS2;
+    return codeS3; // Strategy 3
+  };
+
+  // ฟังก์ชัน setCurrentCode: เขียน code กลับไปยัง state ของ strategy ที่เลือก
+  const setCurrentCode = (value: string) => {
+    if (selectedStrategy === "Strategy 1") {
+      setCodeS1(value);
+    } else if (selectedStrategy === "Strategy 2") {
+      setCodeS2(value);
+    } else {
+      setCodeS3(value);
+    }
+  };
+
+  // เมื่อกด Confirm => เขียนกลับไปยัง defenseData
   const handleConfirm = () => {
     console.log("Selected strategy:", selectedStrategy);
     const mId = parseInt(minionId, 10);
 
-    // เรียกใช้ context เผื่อมีการเก็บค่า strategy ใน state ส่วนกลาง
+    // setStrategy context
     setStrategy(mId, selectedStrategy);
 
-    // ดึง defenseData จาก URL
+    // ดึง defenseData
     const defenseDataStr = searchParams.get("defenseData") || "";
 
-    // อัปเดตเฉพาะมินเนี่ยนที่มี id ตรงกับ mId
-    // ถ้าเป็น Strategy 3 => เก็บ custom code (encodeURIComponent)
-    // มิฉะนั้นเก็บชื่อกลยุทธ์ปกติ ("Strategy 1", "Strategy 2", ...)
+    // แก้เฉพาะมินเนี่ยนที่ตรงกับ mId
     const updatedDefenseData = defenseDataStr
       .split(",")
       .map((entry) => {
         const [id, name, defense, oldStrat] = entry.split(":");
         if (parseInt(id, 10) === mId) {
-          const newStrat =
-            selectedStrategy === "Strategy 3"
-              ? encodeURIComponent(customStrategy)
-              : selectedStrategy;
-          return `${id}:${name}:${defense}:${newStrat}`;
+          if (selectedStrategy === "Strategy 3") {
+            // encode codeS3
+            const encoded = encodeURIComponent(codeS3);
+            return `${id}:${name}:${defense}:Strategy 3||${encoded}`;
+          } else if (selectedStrategy === "Strategy 2") {
+            return `${id}:${name}:${defense}:${selectedStrategy}||${encodeURIComponent(codeS2)}`;
+          } else if (selectedStrategy === "Strategy 1") {
+            return `${id}:${name}:${defense}:${selectedStrategy}||${encodeURIComponent(codeS1)}`;
+          }
         }
         return entry;
       })
       .join(",");
 
-    // เปลี่ยนเส้นทางไปหน้า choose-a-minion-type พร้อม defenseData ที่อัปเดตแล้ว
     router.push(
       `/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${updatedDefenseData}`
     );
@@ -87,7 +152,6 @@ export default function ChooseStrategy() {
 
   // ปุ่ม Back
   const handleBack = () => {
-    console.log("Back button clicked");
     router.push(`/choose-a-minion-type?count=${count}`);
   };
 
@@ -106,16 +170,16 @@ export default function ChooseStrategy() {
         <div className="w-full h-[75vh] p-6 bg-white bg-opacity-20 backdrop-blur-md rounded-lg shadow-lg ml-[45px] mt-[45px]">
           <Textarea
             className={`w-full h-full text-2xl leading-relaxed whitespace-pre-wrap border-none outline-none resize-none bg-transparent shadow-none overflow-y-auto 
-              ${selectedStrategy === "Strategy 3" && !isEditing ? "text-gray-400" : "text-black"}`}
-            // ถ้าเลือก Strategy 3 ให้แสดง customStrategy, ไม่งั้นดึงจาก strategyData
-            value={selectedStrategy === "Strategy 3" ? customStrategy : strategyData[selectedStrategy]}
-            onChange={(e) => {
-              if (selectedStrategy === "Strategy 3") {
-                setCustomStrategy(e.target.value);
-                setIsEditing(true);
-              }
-            }}
-            readOnly={selectedStrategy !== "Strategy 3"}
+              ${
+                selectedStrategy === "Strategy 3" && getCurrentCode().trim() === ""
+                  ? "text-gray-400"
+                  : "text-black"
+              }`}
+            // อ่าน/เขียนจาก state ตาม strategy ที่เลือก
+            value={getCurrentCode()}
+            onChange={(e) => setCurrentCode(e.target.value)}
+            // ถ้าต้องการ lock readOnly เฉพาะ strategy 1,2 => สามารถใส่
+            // readOnly={selectedStrategy !== "Strategy 3"}
           />
         </div>
       </motion.div>
@@ -137,11 +201,8 @@ export default function ChooseStrategy() {
             >
               <Card
                 onClick={() => {
+                  // เปลี่ยน selectedStrategy
                   setSelectedStrategy(strategy);
-                  setIsEditing(false);
-                  if (strategy === "Strategy 3") {
-                    setCustomStrategy(strategyData["Strategy 1"]);
-                  }
                 }}
                 className={`cursor-pointer p-6 h-[150px] bg-white bg-opacity-30 ${
                   selectedStrategy === strategy ? "border-[4px] border-black" : "border-[2px] border-gray-300"

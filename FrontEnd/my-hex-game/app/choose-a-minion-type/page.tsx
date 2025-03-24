@@ -5,13 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import AutoSetting from "./autoSetting";
 
-// ไอคอนสำหรับกลยุทธ์ (ถ้ามีการตั้งค่า strategy แล้วจะเปลี่ยนรูป)
+// ไอคอนสำหรับกลยุทธ์ (รวม Strategy 3)
 const strategyIcons: Record<string, string> = {
   "Strategy 1": "/Strategy1Icon.png",
   "Strategy 2": "/Strategy2Icon.png",
+  "Strategy 3": "/Strategy3Icon.png",
 };
 
-// ตารางค่าป้องกัน (defense) สำหรับการสุ่ม
+// ฟังก์ชัน parseStrategyName
+// ถ้าเป็น "Strategy 3||..." => คืน "Strategy 3"
+// ถ้าเป็น "Strategy 1||..." => ก็คืน "Strategy 1"
+// ถ้าเป็น "Strategy 2||..." => ก็คืน "Strategy 2"
+// (บางครั้งเรา encode โค้ดในรูป "Strategy 1||...")
+function parseStrategyName(str: string): string {
+  if (str.startsWith("Strategy 3||")) return "Strategy 3";
+  if (str.startsWith("Strategy 1||")) return "Strategy 1";
+  if (str.startsWith("Strategy 2||")) return "Strategy 2";
+  return str; // เผื่อเป็น "Strategy 1" / "Strategy 2" เฉย ๆ
+}
+
 const autoDefense: Record<number, number[]> = {
   1: [50],
   2: [30, 70],
@@ -20,7 +32,6 @@ const autoDefense: Record<number, number[]> = {
   5: [0, 30, 40, 45, 35],
 };
 
-// ชื่อ Minion อัตโนมัติตามจำนวนตัว
 const autoNames: Record<number, string[]> = {
   1: ["Minion 1"],
   2: ["Minion 1", "Minion 2"],
@@ -29,14 +40,13 @@ const autoNames: Record<number, string[]> = {
   5: ["Minion 1", "Minion 2", "Minion 3", "Minion 4", "Minion 5"],
 };
 
-// กลยุทธ์ที่ให้สุ่ม
 const allStrategies = ["Strategy 1", "Strategy 2"];
 
 const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 1) ดึงค่า count จาก query string หรือ localStorage
+  // 1) ดึงค่า count
   const [count, setCount] = useState<number>(() => {
     const fromQuery = searchParams.get("count");
     if (fromQuery) return parseInt(fromQuery, 10);
@@ -44,7 +54,7 @@ const ChooseMinionType: React.FC = () => {
     const fromStorage = localStorage.getItem("minionCount");
     if (fromStorage) return parseInt(fromStorage, 10);
 
-    return 1; // ค่า default
+    return 1;
   });
 
   // 2) สร้าง state เก็บข้อมูล Minion ทั้งหมด
@@ -58,19 +68,18 @@ const ChooseMinionType: React.FC = () => {
     }))
   );
 
-  // 3) สร้าง state เก็บว่าเลือก minion ตัวไหนอยู่ (index)
+  // 3) index ของมินเนี่ยนที่เลือก
   const [selected, setSelected] = useState<number>(0);
 
-  // 4) บันทึก count ลง localStorage ทุกครั้งที่เปลี่ยน
+  // 4) บันทึก count ลง localStorage
   useEffect(() => {
     localStorage.setItem("minionCount", count.toString());
   }, [count]);
 
-  // 5) อ่านค่า defenseData จาก URL เมื่อเข้าหน้านี้ครั้งแรก
+  // 5) อ่านค่า defenseData จาก URL เมื่อเปิดหน้านี้
   useEffect(() => {
     const fromQuery = searchParams.get("defenseData");
     if (fromQuery) {
-      // parse defenseData = "1:Minion 1:50:Strategy 2,2:Minion 2:70:Strategy 1" ...
       const parts = fromQuery.split(",");
       const newData: { name: string; defense: string; strategy: string }[] = [];
 
@@ -79,42 +88,35 @@ const ChooseMinionType: React.FC = () => {
         newData.push({
           name: decodeURIComponent(nameEncoded),
           defense,
-          strategy,
+          strategy, // อาจเป็น "Strategy 1||encoded", "Strategy 3||encoded", หรือ "Strategy 1"
         });
       }
       setMinionData(newData);
     }
   }, [searchParams]);
 
-  // ----------------------------------------------------
-  // ฟังก์ชันจัดการต่าง ๆ ในหน้านี้
-  // ----------------------------------------------------
-
-  // เมื่อคลิกเลือก Minion ใด ๆ
+  // เมื่อคลิกเลือก Minion
   const handleSelect = (index: number) => {
     setSelected(index);
   };
 
-  // แก้ไขชื่อ Minion
+  // แก้ไขชื่อ
   const handleNameChange = (index: number, value: string) => {
     setMinionData((prev) =>
       prev.map((m, i) => (i === index ? { ...m, name: value } : m))
     );
   };
 
-  // แก้ไขค่าป้องกัน Minion
+  // แก้ไข defense
   const handleDefenseChange = (index: number, value: string) => {
     setMinionData((prev) =>
       prev.map((m, i) => (i === index ? { ...m, defense: value } : m))
     );
   };
 
-  // **สุ่มข้อมูล + อัปเดต URL** (เรียกจากปุ่ม AutoSetting)
+  // AutoSetting
   const handleAutoFill = () => {
-    // ตรวจสอบว่ามีตารางสุ่มหรือไม่
     if (!autoDefense[count] || !autoNames[count]) return;
-
-    // 1) สุ่มค่า
     const newData = [...minionData];
     autoDefense[count].forEach((def, i) => {
       const name = autoNames[count][i];
@@ -128,7 +130,7 @@ const ChooseMinionType: React.FC = () => {
     });
     setMinionData(newData);
 
-    // 2) สร้าง query string ใหม่
+    // อัปเดต URL
     const defenseData = newData
       .map(
         (m, i) =>
@@ -139,26 +141,19 @@ const ChooseMinionType: React.FC = () => {
     const params = new URLSearchParams();
     params.set("count", count.toString());
     params.set("defenseData", defenseData);
-
-    // 3) ใช้ router.replace เพื่ออัปเดต URL ในหน้านี้ (ไม่เปลี่ยนหน้า)
     router.replace(`?${params.toString()}`);
   };
 
-  // เมื่อคลิกปุ่ม Confirm
+  // Confirm
   const handleConfirm = () => {
-    // ตรวจสอบว่ากรอกครบหรือยัง
     const incompleteIndex = minionData.findIndex(
-      (m) =>
-        m.name.trim() === "" ||
-        m.defense.trim() === "" ||
-        m.strategy.trim() === ""
+      (m) => !m.name.trim() || !m.defense.trim() || !m.strategy.trim()
     );
     if (incompleteIndex !== -1) {
       setSelected(incompleteIndex);
       return;
     }
 
-    // ถ้าครบแล้ว ไปหน้า configurationPage พร้อมแนบ query string
     const defenseData = minionData
       .map(
         (m, i) =>
@@ -168,20 +163,18 @@ const ChooseMinionType: React.FC = () => {
     router.push(`/configurationPage?count=${count}&defenseData=${defenseData}`);
   };
 
-  // ปุ่ม Back
+  // Back
   const handleGoToMenu = () => {
     router.push("/choose-minions");
   };
 
-  // ปุ่ม Home (ไปที่ /pageMenu)
+  // Home
   const handleHome = () => {
     router.push("/pageMenu");
   };
 
   // ปุ่ม Choose Strategy
   const handleChooseStrategy = () => {
-    // *ถ้าต้องการระบุ minionId ให้ส่ง index + 1 ไปด้วย
-    // เพื่อให้หน้า choose-strategy อัปเดตเฉพาะมินเนี่ยนตัวที่เรากำลังแก้
     const minionIndex = selected + 1;
     const defenseData = minionData
       .map(
@@ -189,15 +182,11 @@ const ChooseMinionType: React.FC = () => {
           `${i + 1}:${encodeURIComponent(m.name)}:${m.defense}:${m.strategy}`
       )
       .join(",");
-
     router.push(
       `/choose-strategy?count=${count}&minionId=${minionIndex}&defenseData=${defenseData}`
     );
   };
 
-  // ----------------------------------------------------
-  // เริ่ม Render หน้า
-  // ----------------------------------------------------
   return (
     <div
       className="relative h-screen w-screen bg-cover bg-center bg-no-repeat flex items-center justify-end pr-28"
@@ -207,7 +196,7 @@ const ChooseMinionType: React.FC = () => {
         Setting minion
       </h1>
 
-      {/* ปุ่ม Minion ตามจำนวน */}
+      {/* ปุ่ม Minion */}
       <div
         className="absolute bottom-[260px] left-[780px] flex items-center"
         style={{ gap: count === 5 ? "10px" : "20px" }}
@@ -231,7 +220,7 @@ const ChooseMinionType: React.FC = () => {
         ))}
       </div>
 
-      {/* ภาพ Model ของ Minion ตัวที่เลือก */}
+      {/* ภาพ Model */}
       {selected !== null && (
         <motion.div
           key={selected}
@@ -294,10 +283,10 @@ const ChooseMinionType: React.FC = () => {
             transition={{ duration: 0.2, type: "spring", stiffness: 200 }}
             className="absolute top-[0px] left-[520px] w-[120px] h-[120px] bg-contain bg-no-repeat"
             style={{
+              // parse เพื่อดึงชื่อ Strategy
               backgroundImage: `url("${
-                minionData[selected]?.strategy
-                  ? strategyIcons[minionData[selected]?.strategy]
-                  : "/ChooseAstrategy.png"
+                strategyIcons[parseStrategyName(minionData[selected]?.strategy)] ||
+                "/ChooseAstrategy.png"
               }")`,
               zIndex: 50,
             }}
@@ -317,7 +306,7 @@ const ChooseMinionType: React.FC = () => {
         style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
       />
 
-      {/* ปุ่ม Home (อยู่ด้านขวาของปุ่ม Back) */}
+      {/* ปุ่ม Home */}
       <motion.button
         onClick={handleHome}
         initial={{ opacity: 0, y: 20 }}
