@@ -1,6 +1,5 @@
 package com.example.demo.src.GameStateHierarchy;
 
-import com.example.demo.src.MinionAndStrategyHierarchy.*;
 import java.util.Objects;
 
 public class Hex {
@@ -40,19 +39,8 @@ public class Hex {
         return minion != null;
     }
 
-    public void attackMinionInHex(int Damage){
-        if (minion != null) minion.minionHasAttacked(Damage);
-    }
-
     public boolean isMinionDead(){
         return minion.isDead();
-    }
-
-    public int getMinionAttack(){
-        return minion.minionAttack();
-    }
-    public boolean canMoveMinion(){
-        return minion.canMove();
     }
 
     public Minion getMinion() { return minion;  }

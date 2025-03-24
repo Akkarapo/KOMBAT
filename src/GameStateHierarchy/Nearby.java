@@ -27,7 +27,7 @@ public class Nearby {
         }
     }
 
-
+/*
     public static void main(String[] args) {
         Set<Hex> initialPositions = new HashSet<>();
         initialPositions.add(new Hex(7, 7));
@@ -51,7 +51,7 @@ public class Nearby {
         for (Hex hex : NearbySet) {
             System.out.println(hex);
         }
-    }
+    }*/
 }
 
 

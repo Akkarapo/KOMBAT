@@ -1,17 +1,14 @@
 package com.example.demo.src.GameStateHierarchy;
 
 public class Minion {
-    private final String    ownerName;
+    private String          ownerName;
+    private int             minionNumber;
     private final String    minionName;
     private final int       minionMaxHP;
     private int             minionNowHP;
-    private final int       minionATK = 1;
     private final int       minionDEF;
-    private final int       minionMaxHexMovement = 1;
-    private int             minionNowHexMovement;
-    private int             minionAttackRange = 1;
     private boolean         isDead = false;
-    //boolean alreadyUseSkill;
+
 
     public Minion(String ownerName,String minionName,int minionMaxHP, int minionDEF) {
         this.ownerName = ownerName;
@@ -20,14 +17,19 @@ public class Minion {
         this.minionMaxHP = minionMaxHP;
         this.minionNowHP = minionMaxHP;
         this.minionDEF = minionDEF;
-        //this.minionMaxHexMovement = minionMaxHexMovement;
-        this.minionNowHexMovement = minionMaxHexMovement;
+    }
+
+    public Minion(Minion cloneMinion) {
+        this.ownerName = cloneMinion.getOwnerName();
+        this.minionName = cloneMinion.getMinionName();
+        this.minionMaxHP = cloneMinion.getMinionMaxHP();
+        this.minionNowHP = minionMaxHP;
+        this.minionDEF = cloneMinion.getMinionDEF();
 
     }
 
-    public int minionAttack(){
-        return minionATK;
-    }
+    public void setOwnerName(String ownerName) { this.ownerName = ownerName;}
+    public void setMinionNumber(int minionNumber) { this.minionNumber = minionNumber;}
 
     public void minionHasAttacked(int damage){
         damage -= getMinionDEF();
@@ -36,18 +38,8 @@ public class Minion {
         if(minionNowHP <= 0) isDead = true;
     }
 
-    public void healMinion(int heal){
-        if (heal + minionNowHP > minionMaxHP) minionNowHP = minionMaxHP;
-        else minionNowHP += heal;
-    }
-
+    public int getMinionNumber(){ return minionNumber;}
     public String getMinionName(){  return minionName;  }
-
-    public void moveMinion(){ if(minionNowHexMovement>0) minionNowHexMovement -= 1;}
-
-    public boolean canMove(){return getMinionNowHexMovement()>0;}
-
-    public void resetNowHexMovement(){ minionNowHexMovement = minionMaxHexMovement;}
 
     public String getOwnerName() {return ownerName;}
 
@@ -58,11 +50,5 @@ public class Minion {
     public int getMinionMaxHP() {return minionMaxHP;}
 
     int getMinionDEF(){return minionDEF;}
-
-    int getMinionNowHexMovement(){return minionNowHexMovement;}
-
-    public int getMinionAttackRange(){return minionAttackRange;}
-
-    public int getMinionATK() {return minionATK;}
 
 }

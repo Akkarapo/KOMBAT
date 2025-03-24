@@ -63,6 +63,13 @@ public class Main {
         }
 
         GameState PlayGame = new GameState(mode,setSpawnCost, setHexPurchaseCost, setInitBudget, setMinionHP, setTurnBudget, setMaxBudget, setInterest, setMaxTurn, setMaxMinions, minionType, minionName, minionDEF);
-        PlayGame.GameStart();
+
+        int winner = PlayGame.GameStart();
+
+        System.out.println("________________________________________\n");
+        if(winner == 1) System.out.println("      Winner is...\n             player 1");
+        else if(winner == 2) System.out.println("Winner is player 2");
+        else if(winner == 3) System.out.println("Tie");
+        System.out.println("\n________________________________________");
     }
 }
