@@ -107,6 +107,18 @@ export default function HowToDuelPage() {
           </motion.ul>
         </motion.div>
       </motion.div>
+
+      {/* ✅ ปุ่ม Back */}
+      <motion.button
+        onClick={() => router.push("/pageMenu")}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
+        style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
+      />
     </div>
   );
 }

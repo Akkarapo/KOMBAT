@@ -85,7 +85,7 @@ const LoadingPage = () => {
         setCountdown((prev) => prev - 1);
       }, 1000);
 
-      // ★ อัปเดต timePassed ทุก 50ms => fraction ลื่นขึ้น
+      // ★ อัปเดต timePassed ทุก 20ms => fraction ลื่นขึ้น
       const startTime = Date.now();
       const smoothInterval = setInterval(() => {
         const diff = Date.now() - startTime;
@@ -192,7 +192,7 @@ const LoadingPage = () => {
   // ตำแหน่งมินเนี่ยน
   const positions = [0, 120, 240, 360, 480];
 
-  // ปุ่ม Back
+  // ปุ่ม Back (ใช้รูป BackButton.png) จะแสดงเฉพาะเมื่อ phase === 1 เท่านั้น
   const handleBack = () => {
     router.push(`/configurationPage?${searchParams.toString()}`);
   };
@@ -304,21 +304,17 @@ const LoadingPage = () => {
           )}
         </AnimatePresence>
 
-        {/* ปุ่ม Back */}
-        <button
-          onClick={handleBack}
-          style={{
-            position: "absolute",
-            bottom: "20px",
-            left: "20px",
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer",
-            zIndex: 2,
-          }}
-        >
-          Back
-        </button>
+        {/* ปุ่ม Back (แสดงเฉพาะเมื่อ phase === 1) */}
+        {phase === 1 && (
+          <motion.button
+            onClick={handleBack}
+            className="absolute bottom-[20px] left-[50px] w-[180px] h-[70px] bg-contain bg-no-repeat"
+            style={{ backgroundImage: "url('/BackButton.png')", zIndex: 2 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
       </div>
     </div>
   );

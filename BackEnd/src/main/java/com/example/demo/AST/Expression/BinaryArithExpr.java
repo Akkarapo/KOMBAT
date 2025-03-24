@@ -1,11 +1,13 @@
 package com.example.demo.ast.expression;
 
-public class BinaryArithExpr implements Expression {
-    private Expression left;
-    private String operator;
-    private Expression right;
+import com.example.demo.ast.Node;
 
-    public BinaryArithExpr(Expression left, String operator, Expression right) {
+public class BinaryArithExpr implements Expression {
+    private final Node left;
+    private final String operator;
+    private final Node right;
+
+    public BinaryArithExpr(Node left, String operator, Node right) {
         this.left = left;
         this.operator = operator;
         this.right = right;

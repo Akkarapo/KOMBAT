@@ -29,7 +29,7 @@ const ConfigurationPage = () => {
   const [config, setConfig] = useState<ConfigType>(initialConfig);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
-  // โหลดค่า config จาก localStorage (ถ้ามี) 
+  // โหลดค่า config จาก localStorage (ถ้ามี)
   useEffect(() => {
     const savedConfig = localStorage.getItem("hexConfig");
     if (savedConfig) {
@@ -46,7 +46,9 @@ const ConfigurationPage = () => {
 
   // กดปุ่ม Confirm
   const handleConfirm = () => {
-    const emptyFields = Object.keys(config).filter((key) => config[key as keyof ConfigType] === "");
+    const emptyFields = Object.keys(config).filter(
+      (key) => config[key as keyof ConfigType] === ""
+    );
     if (emptyFields.length > 0) {
       setMissingFields(emptyFields);
       return;
@@ -67,6 +69,11 @@ const ConfigurationPage = () => {
     localStorage.setItem("hexConfig", JSON.stringify(config));
     const savedCount = localStorage.getItem("minionCount") || "1";
     router.push(`/choose-a-minion-type?count=${savedCount}`);
+  };
+
+  // ✅ ปุ่ม Home
+  const handleHome = () => {
+    router.push("/pageMenu");
   };
 
   // (3) ฟังก์ชันสำหรับส่งให้ AutoConfigButton
@@ -165,6 +172,13 @@ const ConfigurationPage = () => {
         onClick={handleBack}
         className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
         style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
+      />
+
+      {/* ✅ ปุ่ม Home (อยู่ด้านขวาของ Back) */}
+      <motion.button
+        onClick={handleHome}
+        className="absolute bottom-[45px] left-[270px] w-[180px] h-[45px] bg-contain bg-no-repeat"
+        style={{ backgroundImage: "url('/HomeButton.png')", zIndex: 50 }}
       />
 
       {/* ปุ่ม Confirm */}
