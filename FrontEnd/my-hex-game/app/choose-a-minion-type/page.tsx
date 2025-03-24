@@ -77,6 +77,7 @@ const ChooseMinionType: React.FC = () => {
   useEffect(() => {
     const fromQuery = searchParams.get("defenseData");
     if (fromQuery) {
+      // parse defenseData = "1:Minion 1:50:Strategy 2,2:Minion 2:70:Strategy 1" ...
       const parts = fromQuery.split(",");
       const newData: { name: string; defense: string; strategy: string }[] = [];
       for (let i = 0; i < parts.length; i++) {
@@ -84,7 +85,7 @@ const ChooseMinionType: React.FC = () => {
         newData.push({
           name: decodeURIComponent(nameEncoded),
           defense,
-          strategy, // อาจเป็น "Strategy 1" หรือ "Strategy 3||encoded" เป็นต้น
+          strategy,
         });
       }
       setMinionData(newData);
@@ -103,8 +104,19 @@ const ChooseMinionType: React.FC = () => {
     );
   };
 
-  // ฟังก์ชันแก้ไข defense
+  // ฟังก์ชันแก้ไข defense โดยจำกัดค่าสูงสุดที่ 999999999 และต่ำสุดที่ 0
   const handleDefenseChange = (index: number, value: string) => {
+    let numericValue = parseInt(value, 10);
+    if (isNaN(numericValue)) {
+      numericValue = 0;
+    }
+    if (numericValue < 0) {
+      numericValue = 0;
+    }
+    if (numericValue > 999999999) {
+      numericValue = 999999999;
+    }
+    value = numericValue.toString();
     setMinionData((prev) =>
       prev.map((m, i) => (i === index ? { ...m, defense: value } : m))
     );
@@ -295,7 +307,7 @@ const ChooseMinionType: React.FC = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="absolute bottom-[20px] left-20 w-[180px] h-[70px] bg-contain bg-no-repeat"
+        className="absolute bottom-[20px] left-[20px] w-[180px] h-[70px] bg-contain bg-no-repeat"
         style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
       />
 

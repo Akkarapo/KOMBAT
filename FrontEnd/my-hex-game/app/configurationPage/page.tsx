@@ -37,10 +37,19 @@ const ConfigurationPage = () => {
     }
   }, []);
 
-  // เมื่อมีการแก้ไข input
+  // เมื่อมีการแก้ไข input (จำกัดค่า numeric ไม่ให้ต่ำกว่า 1 หรือสูงกว่า 999999999)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setConfig((prev) => ({ ...prev, [name]: value }));
+    let newValue = value;
+    const numericValue = parseInt(value, 10);
+    if (!isNaN(numericValue)) {
+      if (numericValue < 1) {
+        newValue = "1";
+      } else if (numericValue > 999999999) {
+        newValue = "999999999";
+      }
+    }
+    setConfig((prev) => ({ ...prev, [name]: newValue }));
     setMissingFields((prev) => prev.filter((field) => field !== name));
   };
 
@@ -71,7 +80,7 @@ const ConfigurationPage = () => {
     router.push(`/choose-a-minion-type?count=${savedCount}`);
   };
 
-  // ✅ ปุ่ม Home
+  // ปุ่ม Home
   const handleHome = () => {
     router.push("/pageMenu");
   };
@@ -174,7 +183,7 @@ const ConfigurationPage = () => {
         style={{ backgroundImage: "url('/BackButton.png')", zIndex: 50 }}
       />
 
-      {/* ✅ ปุ่ม Home (อยู่ด้านขวาของ Back) */}
+      {/* ปุ่ม Home */}
       <motion.button
         onClick={handleHome}
         className="absolute bottom-[45px] left-[270px] w-[180px] h-[45px] bg-contain bg-no-repeat"
@@ -188,10 +197,7 @@ const ConfigurationPage = () => {
         style={{ backgroundImage: "url('/ConfirmButton.png')", zIndex: 50 }}
       />
 
-      {/* 
-        (4) เรียกใช้ AutoConfigButton
-        ส่งฟังก์ชัน handleSetConfig และ handleClearMissingFields เป็น props
-      */}
+      {/* เรียกใช้ AutoConfigButton */}
       <AutoConfigButton
         onSetConfig={handleSetConfig}
         onClearMissingFields={handleClearMissingFields}
