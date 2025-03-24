@@ -9,40 +9,37 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * Controller สำหรับรับ strategy (DSL) + gameState จาก Frontend
- * แล้วส่งต่อไปยัง StatementParser + StrategyInterpreter
- * เพื่อให้ได้ action list กลับมา
- */
-@CrossOrigin(origins = "*")  // <--- เปิด CORS แบบง่าย ๆ (ปรับได้ตามนโยบาย)
 @RestController
 @RequestMapping("/api")
+// @CrossOrigin(origins = "http://localhost:3000") // << ใส่หรือไม่ก็ได้ ถ้าใช้ Global Config
 public class StrategyController {
 
     @PostMapping("/parseStrategy")
     public Map<String, Object> parseStrategy(@RequestBody Map<String, Object> body) throws SyntaxError {
-        // 1) ดึง field "strategy" (โค้ด DSL) จาก body
+        // 1) ดึง strategy DSL
         String strategyCode = (String) body.get("strategy");
         if (strategyCode == null) {
             throw new IllegalArgumentException("No strategy code provided");
         }
 
-        // 2) ดึง field "gameState" (ข้อมูลเกม) จาก body (แคสต์เป็น Map<String,Object> อย่างปลอดภัย)
+        // 2) ดึง gameState (ถ้ามี)
         @SuppressWarnings("unchecked")
         Map<String, Object> gameState = (body.get("gameState") instanceof Map)
                 ? (Map<String, Object>) body.get("gameState")
                 : new HashMap<>();
 
-        // 3) ใช้ Tokenizer + StatementParser เพื่อ parse DSL => AST
+        // 3) Parser
         Tokenizer tkz = new Tokenizer(strategyCode);
         StatementParser parser = new StatementParser(tkz);
         Node ast = parser.parse();
 
-        // 4) เรียกใช้ StrategyInterpreter เพื่อตีความ AST ร่วมกับ gameState
+        // 4) Interpreter
         StrategyInterpreter interpreter = new StrategyInterpreter();
+        // สมมติว่า interpret(...) รองรับการรับ Node + gameState
+        // ถ้ายังไม่รองรับ ก็แก้เป็น interpret(ast) เฉย ๆ
         List<Map<String, Object>> actions = interpreter.interpret(ast, gameState);
 
-        // 5) สร้างผลลัพธ์เป็น JSON ส่งกลับ (เช่น { "actions": [...] })
+        // 5) ส่งกลับ
         Map<String, Object> result = new HashMap<>();
         result.put("actions", actions);
         return result;

@@ -1,22 +1,24 @@
-package com.example.demo.config; // หรือ package อื่นที่สอดคล้องกับโครงสร้างโปรเจกต์ของคุณ
+package com.example.demo.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    /**
-     * addCorsMappings:
-     * - ระบุว่า path ไหนบ้างที่จะเปิด CORS
-     * - allowedOrigins = ต้นทางที่อนุญาตให้เรียก API ได้
-     * - allowedMethods = HTTP methods ที่อนุญาต (GET, POST, PUT, DELETE, ...)
-     */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")               // ระบุ path ที่ต้องการอนุญาต
-                .allowedOrigins("http://localhost:3000")  // ระบุ origin ของ frontend
-                .allowedMethods("*");                      // อนุญาตทุก method
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                // อนุญาตทุก path (/**) สามารถเรียกข้ามโดเมนได้
+                registry.addMapping("/api/**")
+                    .allowedOrigins("http://localhost:3000") // หรือ "*" ถ้าอยากเปิดทุกโดเมน
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                    .allowedHeaders("*")
+                    .allowCredentials(true);
+            }
+        };
     }
 }

@@ -36,15 +36,14 @@ function safeDecode(str: string): string {
   try {
     return decodeURIComponent(str);
   } catch {
-    // ถ้า decode ไม่ได้ => return str เดิม (ป้องกัน URIError)
     return str;
   }
 }
 
 /**
  * parseStrategyAndCode(strat):
- * - ถ้า strat มี "||" => เช่น "Strategy 3||encoded" => แยกแล้ว decode
- * - ถ้าเป็น "Strategy 1" / "Strategy 2" / "Strategy 3" -> คืน default code จาก strategyData
+ * - ถ้า strat มี "||" เช่น "Strategy 3||encodedCode" จะคืน [ "Strategy 3", decodeURIComponent(encodedCode) ]
+ * - ถ้า strat เป็น "Strategy 1" / "Strategy 2" / "Strategy 3" อย่างเดียว จะคืน [ strategy, strategyData[strategy] ]
  */
 function parseStrategyAndCode(strat: string): [string, string] {
   if (strat.includes("||")) {
@@ -56,8 +55,8 @@ function parseStrategyAndCode(strat: string): [string, string] {
 
 /**
  * initStrategyStates(defenseDataStr, mId):
- * - อ่านค่า strategy ของมินเนี่ยน mId จาก defenseDataStr
- * - ถ้าไม่พบ => ใช้ค่าเริ่มต้น "Strategy 1"
+ * - อ่านค่า strategy ของมินเนี่ยนที่มี id = mId จาก defenseDataStr
+ * - ถ้าไม่พบให้ใช้ "Strategy 1" เป็นค่าเริ่มต้น
  */
 function initStrategyStates(defenseDataStr: string, mId: number) {
   let selectedStrategy = "Strategy 1"; // default
@@ -96,7 +95,7 @@ export default function ChooseStrategy() {
   const defenseDataStr = searchParams.get("defenseData") || "";
   const initStates = initStrategyStates(defenseDataStr, mId);
 
-  // สร้าง state ด้วยค่าที่ parse ได้ => render ครั้งแรกก็จะเห็น strategy ที่เคยตั้ง หรือ "Strategy 1" ถ้าไม่มี
+  // สร้าง state ด้วยค่าที่ parse ได้
   const [selectedStrategy, setSelectedStrategy] = useState(initStates.selectedStrategy);
   const [codeS1, setCodeS1] = useState(initStates.codeS1);
   const [codeS2, setCodeS2] = useState(initStates.codeS2);
@@ -118,15 +117,15 @@ export default function ChooseStrategy() {
 
   // -- Confirm --
   const handleConfirm = () => {
+    // บันทึก strategy ลง context (strategy จะถูกส่งไปที่ backend โดย MinionActions ผ่าน useStrategy)
     setStrategy(mId, selectedStrategy);
 
-    // สร้าง defenseData ใหม่
+    // สร้าง defenseData ใหม่โดยเอา strategy ที่เลือกและ code ที่แก้ไขมาเข้ารหัส
     const updated = defenseDataStr
       .split(",")
       .map((entry) => {
         const [id, name, defense, oldStrat] = entry.split(":");
         if (parseInt(id, 10) === mId) {
-          // เขียน "Strategy X||encode"
           if (selectedStrategy === "Strategy 3") {
             return `${id}:${name}:${defense}:Strategy 3||${encodeURIComponent(codeS3)}`;
           } else if (selectedStrategy === "Strategy 2") {
@@ -139,11 +138,11 @@ export default function ChooseStrategy() {
       })
       .join(",");
 
-    // กลับไปหน้า choose-a-minion-type
+    // กลับไปหน้า choose-a-minion-type โดยส่ง defenseData ไปใน URL
     router.push(`/choose-a-minion-type?count=${count}&minionId=${mId}&defenseData=${updated}`);
   };
 
-  // -- Back => ไม่แก้ไข defenseData --
+  // -- Back --
   const handleBack = () => {
     router.push(`/choose-a-minion-type?count=${count}&defenseData=${defenseDataStr}`);
   };
