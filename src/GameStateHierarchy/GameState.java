@@ -54,7 +54,7 @@ public class GameState {
      *  @param minionName           ชื่อมินเนี่ยนแต่ละแบบ
      *  @param minionDEF            พลังป้องกันของมินเนี่ยนแต่ละแบบ
      */
-    GameState(int mode, int spawn_cost,int hex_purchase_cost,long init_budget,int init_hp,int turn_budget,int max_budget,int interest_pct,int max_turn,int max_spawns, int minionTypeAmount , String[] minionName, int[] minionDEF) {
+    GameState(int mode, int spawn_cost,int hex_purchase_cost,long init_budget,int init_hp,int turn_budget,int max_budget,int interest_pct,int max_turn,int max_spawns, int minionTypeAmount , String[] minionName, int[] minionDEF, String[] MinionStrategy) {
        config = new Configloader(spawn_cost,hex_purchase_cost,init_budget,init_hp,turn_budget,max_budget,interest_pct,max_turn,max_spawns);
 
        this.GameMode    = mode;
@@ -70,7 +70,7 @@ public class GameState {
         this.minionTypeAmount = minionTypeAmount;
         MinionType = new Minion[this.minionTypeAmount];
         for (int i = 0; i < this.minionTypeAmount; i++) {
-            MinionType[i] = new Minion("000",minionName[i],config.getInitHP(),minionDEF[i]);
+            MinionType[i] = new Minion("000",minionName[i],config.getInitHP(),minionDEF[i],MinionStrategy[i]);
         }
 
         String P1Type="Human",P2Type="Human";
@@ -233,7 +233,12 @@ public class GameState {
                 }//วงเล็บของการกระทำในเทิร์น
             }//ปีกกา else if human or bot
 
-            //for ()
+            Map<Integer, int[]> minions = currentPlayer.minionsPlayerHave();
+            for (Integer minionKey : minions.keySet()) {
+                while(true){
+                    // read Strategy and do something
+                }
+            }
 
             if(player2.getNowMinionPlayerHave()==0 && ISp2SpawnFirstMinion) break;
             else if(player1.getNowMinionPlayerHave()==0 && ISp1SpawnFirstMinion) break;

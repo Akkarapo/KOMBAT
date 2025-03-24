@@ -9,14 +9,18 @@ public class Minion {
     private final int       minionDEF;
     private boolean         isDead = false;
 
+    private String          MinionStrategy;
 
-    public Minion(String ownerName,String minionName,int minionMaxHP, int minionDEF) {
+
+    public Minion(String ownerName,String minionName,int minionMaxHP, int minionDEF,String MinionStrategy) {
         this.ownerName = ownerName;
         this.minionName = minionName;
 
         this.minionMaxHP = minionMaxHP;
         this.minionNowHP = minionMaxHP;
         this.minionDEF = minionDEF;
+
+        this.MinionStrategy = MinionStrategy;
     }
 
     public Minion(Minion cloneMinion) {
@@ -25,8 +29,17 @@ public class Minion {
         this.minionMaxHP = cloneMinion.getMinionMaxHP();
         this.minionNowHP = minionMaxHP;
         this.minionDEF = cloneMinion.getMinionDEF();
-
+        this.MinionStrategy = cloneMinion.getMinionStrategy();
     }
+
+    public String getMinionStrategy() {
+        return MinionStrategy;
+    }
+
+    public void setMinionStrategy(String MinionStrategy) {
+        this.MinionStrategy = MinionStrategy;
+    }
+
 
     public void setOwnerName(String ownerName) { this.ownerName = ownerName;}
     public void setMinionNumber(int minionNumber) { this.minionNumber = minionNumber;}

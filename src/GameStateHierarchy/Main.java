@@ -14,7 +14,7 @@ public class Main {
         System.out.println("1. Player vs Player");
         System.out.println("2. Player vs Bot");
         System.out.println("3. Bot vs Bot");
-        System.out.print(" : ");
+        System.out.print("Your choice : ");
         while(x){
             mode = sc.nextInt();
             if(mode==1||mode==2||mode==3) x=false;
@@ -54,15 +54,28 @@ public class Main {
 
         String[]    minionName = new String[minionType];
         int[]       minionDEF  = new int[minionType];
+
+        String[]      minionStrategy    = new String[minionType];
+        StringBuilder strategyText      = new StringBuilder();
+
         System.out.println("Minion setting");
         for(int i = 0; i<minionType;i++){
             System.out.print((i+1)+") Minion Name: ");
             minionName[i] = sc.next();
             System.out.print((i+1)+") Minion DEF: ");
             minionDEF[i] = sc.nextInt();
+
+            System.out.println("Write minion strategy: ");
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                if (line.equalsIgnoreCase("END")) break; // หยุดเมื่อพิมพ์ END
+                strategyText.append(line).append("\n");
+            }
+            minionStrategy[i] = strategyText.toString();
         }
 
-        GameState PlayGame = new GameState(mode,setSpawnCost, setHexPurchaseCost, setInitBudget, setMinionHP, setTurnBudget, setMaxBudget, setInterest, setMaxTurn, setMaxMinions, minionType, minionName, minionDEF);
+
+        GameState PlayGame = new GameState(mode,setSpawnCost, setHexPurchaseCost, setInitBudget, setMinionHP, setTurnBudget, setMaxBudget, setInterest, setMaxTurn, setMaxMinions, minionType, minionName, minionDEF,minionStrategy);
 
         int winner = PlayGame.GameStart();
 
