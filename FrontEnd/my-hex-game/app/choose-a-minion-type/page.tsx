@@ -180,7 +180,19 @@ const ChooseMinionType: React.FC = () => {
 
   // ปุ่ม Choose Strategy
   const handleChooseStrategy = () => {
-    router.push("/choose-strategy?someParam=xxx");
+    // *ถ้าต้องการระบุ minionId ให้ส่ง index + 1 ไปด้วย
+    // เพื่อให้หน้า choose-strategy อัปเดตเฉพาะมินเนี่ยนตัวที่เรากำลังแก้
+    const minionIndex = selected + 1;
+    const defenseData = minionData
+      .map(
+        (m, i) =>
+          `${i + 1}:${encodeURIComponent(m.name)}:${m.defense}:${m.strategy}`
+      )
+      .join(",");
+
+    router.push(
+      `/choose-strategy?count=${count}&minionId=${minionIndex}&defenseData=${defenseData}`
+    );
   };
 
   // ----------------------------------------------------

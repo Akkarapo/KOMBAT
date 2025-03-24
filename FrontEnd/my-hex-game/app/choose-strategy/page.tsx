@@ -36,38 +36,56 @@ export default function ChooseStrategy() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ ดึงค่า count และ minionId จาก URL
+  // ดึงค่า count และ minionId จาก URL
   const count = searchParams.get("count") || "1";
   const minionId = searchParams.get("minionId") || "1";
 
-  // ✅ ใช้ context เพื่อเก็บค่า strategy
+  // ใช้ context เพื่อเก็บค่า strategy
   const { setStrategy } = useUserStrategy();
 
-  // ❗ เปลี่ยนให้เป็น string โดยตรง เพื่อไม่ให้ TypeScript ตีความผิด
+  // กำหนดค่าเริ่มต้นสำหรับ strategy
   const [selectedStrategy, setSelectedStrategy] = useState<string>("Strategy 1");
-
-  // ถ้าต้องการใช้ keyof typeof strategyData ก็ได้
-  // แต่ต้องแน่ใจว่า strategyData ไม่มี key เป็น number
-  // const [selectedStrategy, setSelectedStrategy] = useState<keyof typeof strategyData>("Strategy 1");
-
   const [customStrategy, setCustomStrategy] = useState<string>(strategyData["Strategy 1"]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // ✅ ฟังก์ชันบันทึก Strategy แล้วกลับไปหน้า choose-a-minion-type
+  // ฟังก์ชันบันทึก Strategy แล้วกลับไปหน้า choose-a-minion-type
+  // โดยอัปเดตค่า defenseData เฉพาะมินเนี่ยนตัวที่ตรงกับ minionId
+  // ถ้าเป็น "Strategy 3" จะเก็บ custom code ลงในช่อง strategy
   const handleConfirm = () => {
     console.log("Selected strategy:", selectedStrategy);
+    const mId = parseInt(minionId, 10);
 
-    // parseInt -> number, selectedStrategy -> string
-    setStrategy(parseInt(minionId, 10), selectedStrategy);
+    // เรียกใช้ context เผื่อมีการเก็บค่า strategy ใน state ส่วนกลาง
+    setStrategy(mId, selectedStrategy);
 
     // ดึง defenseData จาก URL
-    const defenseData = searchParams.get("defenseData") || "";
+    const defenseDataStr = searchParams.get("defenseData") || "";
 
-    // เปลี่ยนเส้นทางไปกรอกชื่อ + ค่าป้องกัน minion
-    router.push(`/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${defenseData}`);
+    // อัปเดตเฉพาะมินเนี่ยนที่มี id ตรงกับ mId
+    // ถ้าเป็น Strategy 3 => เก็บ custom code (encodeURIComponent)
+    // มิฉะนั้นเก็บชื่อกลยุทธ์ปกติ ("Strategy 1", "Strategy 2", ...)
+    const updatedDefenseData = defenseDataStr
+      .split(",")
+      .map((entry) => {
+        const [id, name, defense, oldStrat] = entry.split(":");
+        if (parseInt(id, 10) === mId) {
+          const newStrat =
+            selectedStrategy === "Strategy 3"
+              ? encodeURIComponent(customStrategy)
+              : selectedStrategy;
+          return `${id}:${name}:${defense}:${newStrat}`;
+        }
+        return entry;
+      })
+      .join(",");
+
+    // เปลี่ยนเส้นทางไปหน้า choose-a-minion-type พร้อม defenseData ที่อัปเดตแล้ว
+    router.push(
+      `/choose-a-minion-type?count=${count}&minionId=${minionId}&defenseData=${updatedDefenseData}`
+    );
   };
 
-  // ✅ ปุ่ม Back
+  // ปุ่ม Back
   const handleBack = () => {
     console.log("Back button clicked");
     router.push(`/choose-a-minion-type?count=${count}`);
@@ -119,10 +137,8 @@ export default function ChooseStrategy() {
             >
               <Card
                 onClick={() => {
-                  // เมื่อคลิก, set state เป็นกลยุทธ์นั้น
                   setSelectedStrategy(strategy);
                   setIsEditing(false);
-                  // ถ้าคลิก Strategy 3 ให้เอาโค้ดของ Strategy 1 มาเป็น base
                   if (strategy === "Strategy 3") {
                     setCustomStrategy(strategyData["Strategy 1"]);
                   }
