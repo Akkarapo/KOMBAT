@@ -1,4 +1,3 @@
-// strategyData.ts
 export const strategyData: { [key: string]: string } = {
   "Strategy 1": `t = 0   
 t = t + 1
@@ -116,5 +115,6 @@ while (3 - m) {
   }
 }    `,
 
+  // Strategy 3 ไม่มี default code
   "Strategy 3": ``
 };

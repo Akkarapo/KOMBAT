@@ -1,7 +1,9 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { UserStrategyProvider } from "@/app/choose-strategy/userStrategyData"; // ✅ Import UserStrategyProvider
+import { GlobalStrategyProvider } from "@/app/choose-strategy/GlobalStrategyContext"; // ปรับเส้นทางให้ถูกต้อง
+import { UserStrategyProvider } from "@/app/choose-strategy/userStrategyData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,12 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* ✅ ครอบแอปทั้งหมดด้วย UserStrategyProvider */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* ครอบ Provider ทั้งหมด */}
         <UserStrategyProvider>
-          {children}
+          <GlobalStrategyProvider>
+            {children}
+          </GlobalStrategyProvider>
         </UserStrategyProvider>
       </body>
     </html>
