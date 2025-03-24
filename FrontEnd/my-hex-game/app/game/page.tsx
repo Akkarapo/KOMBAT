@@ -12,10 +12,11 @@ import InformationForPlayers from "./InformationForPlayers";
 import MinionStrategyInformation from "./minionStrategyInformation";
 import { initialGreenHexes, GreenHexData } from "../../components/dataGreen";
 import { initialRedHexes, RedHexData } from "../../components/dataRed";
-
-// นำเข้า MinionActions และ interfaces จาก useStrategy
 import MinionActions from "../choose-strategy/minionActions";
 import { Action, GameState } from "../choose-strategy/useStrategy";
+
+// ★ import our MoreButtonPopUp
+import MoreButtonPopUp from "../game/moreButtonPopUp";
 
 // ---------- ตัวแปร style สำหรับ Player / Blooming ----------
 const playerRedStyle = {
@@ -84,11 +85,9 @@ const noAnimationVariants = {
   visible: { opacity: 1, transition: { duration: 0 } },
 };
 
-/** Helper: แปลงสตริง "(row,col)" เป็น { row: number, col: number } */
+/** Helper: แปลงสตริง "(row,col)" เป็น { row: number; col: number } */
 function parseKey(key: string): { row: number; col: number } {
-  // ตัวอย่าง key = "(2,3)"
-  // ตัดวงเล็บออก แล้ว split ด้วย ','
-  const trimmed = key.replace(/[()]/g, ""); // "2,3"
+  const trimmed = key.replace(/[()]/g, ""); // ตัดวงเล็บ
   const [r, c] = trimmed.split(",");
   return { row: parseInt(r, 10), col: parseInt(c, 10) };
 }
@@ -121,15 +120,11 @@ function findHexKeyOfMinion(
   return null;
 }
 
-/** ฟังก์ชันคำนวณตำแหน่งใหม่จาก direction (ตัวอย่าง) */
+/** ฟังก์ชันคำนวณตำแหน่งใหม่จาก direction */
 function calcNewPosition(oldRow: number, oldCol: number, direction: string): { row: number; col: number } {
   let newRow = oldRow;
   let newCol = oldCol;
-
-  // ตัวอย่าง: ถ้า Hex เป็นแบบ Odd-r หรือ Even-r ให้ปรับ logic ตาม
-  // สมมติใช้ Even-r (col%2 === 0 จะ offset ต่างจาก col%2 === 1)
-  // นี่เป็นแค่ตัวอย่าง:
-  const isEvenCol = (oldCol % 2 === 0);
+  const isEvenCol = oldCol % 2 === 0;
 
   switch (direction) {
     case "downleft":
@@ -155,7 +150,7 @@ function calcNewPosition(oldRow: number, oldCol: number, direction: string): { r
       newRow = oldRow - 1;
       break;
     default:
-      // ไม่รู้จัก direction → ไม่ขยับ
+      // ไม่ขยับ
       break;
   }
 
@@ -178,12 +173,14 @@ const Page = () => {
   const param_max_turns = parseInt(searchParams.get("max_turns") || "100", 10);
   const param_max_spawns = parseInt(searchParams.get("max_spawns") || "5", 10);
 
+  // โหลดค่า mode, minionCount
   const [mode, setMode] = useState<string>("Loading...");
   const [minionCount, setMinionCount] = useState<number>(0);
 
   useEffect(() => {
     const gameMode = searchParams.get("mode") || "Default";
     setMode(gameMode);
+
     const count = parseInt(searchParams.get("count") || "0", 10);
     setMinionCount(count);
   }, [searchParams]);
@@ -198,18 +195,18 @@ const Page = () => {
   // ฝั่งที่เล่นปัจจุบัน
   const [currentTurn, setCurrentTurn] = useState<"green" | "red">("green");
 
-  // Hex เริ่มต้นของแต่ละฝั่ง
+  // Hex เริ่มต้น
   const [greenHexes, setGreenHexes] = useState<GreenHexData[]>([...initialGreenHexes]);
   const [redHexes, setRedHexes] = useState<RedHexData[]>([...initialRedHexes]);
 
-  // เมื่อคลิก Hex สีเรา → ซื้อ Minion
+  // คลิก Hex สีเรา → เลือกซื้อ Minion
   const [selectedHexForMinion, setSelectedHexForMinion] = useState<string | null>(null);
   const handleOwnedHexClick = (hexKey: string) => {
     setSelectedHexForMinion(hexKey);
     setShowMinionsCard(true);
   };
 
-  // หักเงิน
+  // ฟังก์ชันหักเงิน
   const deductGreenCoin = (amount: number) => {
     setGreenCoin((prev) => Math.max(0, prev - amount));
   };
@@ -217,7 +214,7 @@ const Page = () => {
     setRedCoin((prev) => Math.max(0, prev - amount));
   };
 
-  // เปลี่ยนเทิร์น
+  // ปุ่มเปลี่ยนเทิร์น
   const handleAction = () => {
     if (remainingTurns > 0 && canAct) {
       setRemainingTurns((prev) => prev - 1);
@@ -228,7 +225,9 @@ const Page = () => {
       if (currentTurn === "green") {
         setGreenCoin((prev) => {
           let newBudget = prev + param_turn_budget;
-          const interest = Math.floor(param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase));
+          const interest = Math.floor(
+            param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+          );
           newBudget += interest;
           newBudget = Math.min(newBudget, param_max_budget);
           return newBudget;
@@ -236,7 +235,9 @@ const Page = () => {
       } else {
         setRedCoin((prev) => {
           let newBudget = prev + param_turn_budget;
-          const interest = Math.floor(param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase));
+          const interest = Math.floor(
+            param_interest_pct * Math.log(newBudget + 1) / Math.log(interestBase)
+          );
           newBudget += interest;
           newBudget = Math.min(newBudget, param_max_budget);
           return newBudget;
@@ -251,7 +252,7 @@ const Page = () => {
   const openMinionsCard = () => setShowMinionsCard(true);
   const closeMinionsCard = () => setShowMinionsCard(false);
 
-  // เมื่อกดปุ่ม Buy ในการ์ด
+  // ซื้อ Minion
   const handleBuyMinion = (minionName: string) => {
     if (!selectedHexForMinion) return;
     const found = minions.find((m) => m.name === minionName);
@@ -284,7 +285,7 @@ const Page = () => {
     setShowMinionsCard(false);
   };
 
-  // Popup InformationForPlayers
+  // Popup Info
   const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   // Popup MinionStrategyInformation
@@ -302,33 +303,28 @@ const Page = () => {
     setShowInfoPopup(true);
   };
 
-  // สร้าง gameState ให้ส่งไป backend
+  // สร้าง gameState ส่งให้ backend
   const gameState: GameState = {
     budget: currentTurn === "green" ? greenCoin : redCoin,
-    opponentLoc: 42, // สมมติ
+    opponentLoc: 42,
     nearby: { up: 1, down: 2, upleft: 1, upright: 1, downleft: 2, downright: 2 },
     random: Math.floor(Math.random() * 100),
   };
 
-  // ★★ ตรงนี้คือฟังก์ชันย่อย: เมื่อได้รับ "move" → คำนวณตำแหน่งใหม่
+  // ฟังก์ชัน action minion
   const doMove = (minion: MinionData, direction: string) => {
-    // 1) หา oldKey
     const oldKey = findHexKeyOfMinion(minion, currentTurn, greenHexes, redHexes);
     if (!oldKey) {
       console.log(`ไม่พบ minion ${minion.name} ใน HexGrid`);
       return;
     }
     const { row: oldRow, col: oldCol } = parseKey(oldKey);
-
-    // 2) คำนวณ newRow, newCol จาก direction
     const { row: newRow, col: newCol } = calcNewPosition(oldRow, oldCol, direction);
     const newKey = buildKey(newRow, newCol);
 
-    // 3) ลบ minion ออกจาก oldKey และใส่ใน newKey
     if (currentTurn === "green") {
-      // ลบจาก greenHexes + ใส่ใน newKey (ถ้ามีอยู่แล้วก็ push, ถ้าไม่มีสร้างใหม่)
       setGreenHexes((prev) => {
-        // ลบออกจาก oldKey
+        // ลบจาก oldKey
         const newHexes = prev.map((hex) => {
           if (hex.key === oldKey) {
             return {
@@ -338,9 +334,7 @@ const Page = () => {
           }
           return hex;
         });
-
-        // ใส่ใน newKey
-        // ถ้ามีอยู่แล้ว
+        // เพิ่มใน newKey
         const indexTarget = newHexes.findIndex((h) => h.key === newKey);
         if (indexTarget !== -1) {
           newHexes[indexTarget] = {
@@ -351,7 +345,6 @@ const Page = () => {
             ],
           };
         } else {
-          // ยังไม่มี hex นี้ → สร้างใหม่
           newHexes.push({
             key: newKey,
             minions: [{ minionId: minion.minionId, name: minion.name }],
@@ -360,7 +353,6 @@ const Page = () => {
         return newHexes;
       });
     } else {
-      // เหมือนกัน แต่กับ redHexes
       setRedHexes((prev) => {
         const newHexes = prev.map((hex) => {
           if (hex.key === oldKey) {
@@ -391,7 +383,6 @@ const Page = () => {
     }
   };
 
-  // ฟังก์ชันจัดการ action ที่ได้จาก MinionActions
   const handleMinionAction = (action: Action, minion: MinionData) => {
     if (action.type === "move") {
       console.log(`Minion ${minion.name} move to direction = ${action.direction}`);
@@ -406,7 +397,7 @@ const Page = () => {
     }
   };
 
-  // เช็คว่าหมดเทิร์นรึยัง
+  // เมื่อหมดเทิร์น
   useEffect(() => {
     if (remainingTurns <= 0) {
       const greenMinionCount = greenHexes.reduce((acc, hex) => acc + hex.minions.length, 0);
@@ -424,7 +415,7 @@ const Page = () => {
 
   return (
     <div className="relative w-full h-screen bg-[url('/background.png')] bg-cover bg-center flex items-center justify-center">
-      {/* ★★ เรียก MinionActions สำหรับแต่ละมินเนี่ยน */}
+      {/* MinionActions: ประมวลผล strategy แต่ละมินเนี่ยน */}
       {minions.map((m) => (
         <MinionActions
           key={m.minionId}
@@ -434,13 +425,23 @@ const Page = () => {
         />
       ))}
 
-      {/* ปุ่ม Show Info */}
-      <button
-        className="absolute top-10 right-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition"
+      {/* 
+        ปุ่ม Info เดิม → เปลี่ยนเป็นรูป InfoButton.png 
+        และย้ายมาไว้ด้านบนปุ่ม More (ที่ bottom:20px)
+        เช่นตั้ง bottom:120px หรือ 180px ตามขนาด
+      */}
+      <motion.button
         onClick={() => setShowInfoPopup(true)}
-      >
-        Show Info
-      </button>
+        className="fixed z-50 w-[180px] h-[60px] bg-contain bg-no-repeat"
+        style={{
+          bottom: "100px", // ปรับตามต้องการให้อยู่เหนือปุ่ม More
+          left: "20px",
+          backgroundImage: "url('/InfoButton.png')",
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+      />
 
       {/* Player 1 = Green */}
       <motion.div
@@ -562,13 +563,8 @@ const Page = () => {
         />
       )}
 
-      {/* Back to Menu Button */}
-      <button
-        className="absolute bottom-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-md text-lg font-bold hover:bg-red-700 transition"
-        onClick={() => (window.location.href = "/pageMenu")}
-      >
-        Back to Menu
-      </button>
+      {/* ปุ่ม More */}
+      <MoreButtonPopUp />
     </div>
   );
 };
