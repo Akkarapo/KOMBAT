@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import AutoSetting from "./autoSetting";
 
-// ไอคอน Strategy (เพิ่ม Strategy 3 ด้วย)
+// ไอคอนสำหรับกลยุทธ์ (รวม Strategy 3)
 const strategyIcons: Record<string, string> = {
   "Strategy 1": "/Strategy1Icon.png",
   "Strategy 2": "/Strategy2Icon.png",
@@ -13,8 +13,7 @@ const strategyIcons: Record<string, string> = {
 };
 
 /**
- * ถ้าเป็น "Strategy X||encoded" => คืนเฉพาะ "Strategy X"
- * ถ้าเป็น "Strategy X" => คืน "Strategy X"
+ * ถ้า strategy string มีรูปแบบ "Strategy X||encoded" ให้คืนเฉพาะชื่อ "Strategy X"
  */
 function parseStrategyName(fullStr: string): string {
   if (fullStr.includes("||")) {
@@ -24,7 +23,6 @@ function parseStrategyName(fullStr: string): string {
   return fullStr;
 }
 
-// ตารางค่าป้องกันอัตโนมัติ
 const autoDefense: Record<number, number[]> = {
   1: [50],
   2: [30, 70],
@@ -33,7 +31,6 @@ const autoDefense: Record<number, number[]> = {
   5: [0, 30, 40, 45, 35],
 };
 
-// ชื่อ Minion อัตโนมัติ
 const autoNames: Record<number, string[]> = {
   1: ["Minion 1"],
   2: ["Minion 1", "Minion 2"],
@@ -42,14 +39,13 @@ const autoNames: Record<number, string[]> = {
   5: ["Minion 1", "Minion 2", "Minion 3", "Minion 4", "Minion 5"],
 };
 
-// กลยุทธ์ที่ให้สุ่ม (ถ้าใช้ AutoSetting)
 const allStrategies = ["Strategy 1", "Strategy 2"];
 
-export default function ChooseMinionType() {
+const ChooseMinionType: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 1) ดึงค่า count
+  // ดึงค่า count จาก URL หรือ localStorage
   const [count, setCount] = useState<number>(() => {
     const fromQuery = searchParams.get("count");
     if (fromQuery) return parseInt(fromQuery, 10);
@@ -58,7 +54,7 @@ export default function ChooseMinionType() {
     return 1;
   });
 
-  // 2) สร้าง state เก็บข้อมูล Minion
+  // state เก็บข้อมูล minionData: name, defense, strategy
   const [minionData, setMinionData] = useState<
     { name: string; defense: string; strategy: string }[]
   >(
@@ -69,54 +65,52 @@ export default function ChooseMinionType() {
     }))
   );
 
-  // 3) index ของมินเนี่ยนที่เลือก
+  // state เก็บ index ของมินเนี่ยนที่เลือก
   const [selected, setSelected] = useState<number>(0);
 
-  // 4) บันทึก count ลง localStorage
+  // เมื่อ count เปลี่ยน ให้บันทึกลง localStorage
   useEffect(() => {
     localStorage.setItem("minionCount", count.toString());
   }, [count]);
 
-  // 5) อ่านค่า defenseData จาก URL เมื่อเข้าหน้านี้ครั้งแรก
+  // useEffect สำหรับ sync state กับ URL defenseData
   useEffect(() => {
     const fromQuery = searchParams.get("defenseData");
     if (fromQuery) {
-      // parse "1:Minion 1:50:Strategy 3||encoded,2:Minion 2:30:Strategy 1||xxx,..."
       const parts = fromQuery.split(",");
       const newData: { name: string; defense: string; strategy: string }[] = [];
-
       for (let i = 0; i < parts.length; i++) {
         const [idxStr, nameEncoded, defense, strategy] = parts[i].split(":");
         newData.push({
           name: decodeURIComponent(nameEncoded),
           defense,
-          strategy, // อาจเป็น "Strategy 3||someEncoded"
+          strategy, // อาจเป็น "Strategy 1" หรือ "Strategy 3||encoded" เป็นต้น
         });
       }
       setMinionData(newData);
     }
   }, [searchParams]);
 
-  // เมื่อคลิกเลือก Minion
+  // ฟังก์ชันเลือกมินเนี่ยน
   const handleSelect = (index: number) => {
     setSelected(index);
   };
 
-  // แก้ไขชื่อ Minion
+  // ฟังก์ชันแก้ไขชื่อมินเนี่ยน
   const handleNameChange = (index: number, value: string) => {
     setMinionData((prev) =>
       prev.map((m, i) => (i === index ? { ...m, name: value } : m))
     );
   };
 
-  // แก้ไขค่าป้องกัน
+  // ฟังก์ชันแก้ไข defense
   const handleDefenseChange = (index: number, value: string) => {
     setMinionData((prev) =>
       prev.map((m, i) => (i === index ? { ...m, defense: value } : m))
     );
   };
 
-  // AutoSetting
+  // ฟังก์ชัน AutoSetting
   const handleAutoFill = () => {
     if (!autoDefense[count] || !autoNames[count]) return;
     const newData = [...minionData];
@@ -127,12 +121,12 @@ export default function ChooseMinionType() {
       newData[i] = {
         name,
         defense: def.toString(),
-        strategy: randomStrategy, // ไม่ได้ encode อะไร
+        strategy: randomStrategy,
       };
     });
     setMinionData(newData);
 
-    // อัปเดต URL
+    // อัปเดต query string ใน URL
     const defenseData = newData
       .map(
         (m, i) =>
@@ -145,9 +139,8 @@ export default function ChooseMinionType() {
     router.replace(`?${params.toString()}`);
   };
 
-  // Confirm
+  // ฟังก์ชัน Confirm: ตรวจสอบข้อมูล แล้วส่งไปหน้า configurationPage
   const handleConfirm = () => {
-    // ตรวจสอบว่ากรอกครบหรือยัง
     const incompleteIndex = minionData.findIndex(
       (m) => !m.name.trim() || !m.defense.trim() || !m.strategy.trim()
     );
@@ -155,8 +148,6 @@ export default function ChooseMinionType() {
       setSelected(incompleteIndex);
       return;
     }
-
-    // สร้าง query string ส่งไปหน้า configurationPage
     const defenseData = minionData
       .map(
         (m, i) =>
@@ -176,9 +167,8 @@ export default function ChooseMinionType() {
     router.push("/pageMenu");
   };
 
-  // ปุ่ม Choose Strategy
+  // ปุ่ม Choose Strategy: ส่งข้อมูลปัจจุบัน (defenseData, count, minionId) ไปหน้า choose-strategy
   const handleChooseStrategy = () => {
-    // ส่ง index+1, defenseData => /choose-strategy
     const minionIndex = selected + 1;
     const defenseData = minionData
       .map(
@@ -191,7 +181,6 @@ export default function ChooseMinionType() {
     );
   };
 
-  // Render
   return (
     <div
       className="relative h-screen w-screen bg-cover bg-center bg-no-repeat flex items-center justify-end pr-28"
@@ -201,7 +190,7 @@ export default function ChooseMinionType() {
         Setting minion
       </h1>
 
-      {/* ปุ่ม Minion ตามจำนวน */}
+      {/* ปุ่มมินเนี่ยน */}
       <div
         className="absolute bottom-[260px] left-[780px] flex items-center"
         style={{ gap: count === 5 ? "10px" : "20px" }}
@@ -225,7 +214,7 @@ export default function ChooseMinionType() {
         ))}
       </div>
 
-      {/* ภาพ Model ของ Minion ที่เลือก */}
+      {/* ภาพ Model ของมินเนี่ยนที่เลือก */}
       {selected !== null && (
         <motion.div
           key={selected}
@@ -243,7 +232,7 @@ export default function ChooseMinionType() {
         </motion.div>
       )}
 
-      {/* ช่องกรอก Name / Defense / Strategy */}
+      {/* ช่องกรอกข้อมูล Name / Defense / Strategy */}
       {selected !== null && (
         <motion.div className="absolute left-[800px] bottom-[120px] flex flex-col items-start">
           <motion.img
@@ -280,7 +269,7 @@ export default function ChooseMinionType() {
             />
           </div>
 
-          {/* ปุ่มเลือก Strategy */}
+          {/* ปุ่ม Choose Strategy */}
           <motion.button
             onClick={handleChooseStrategy}
             whileHover={{ scale: 1.1 }}
@@ -322,7 +311,7 @@ export default function ChooseMinionType() {
         style={{ backgroundImage: "url('/HomeButton.png')", zIndex: 50 }}
       />
 
-      {/* ปุ่ม Auto Setting */}
+      {/* ปุ่ม AutoSetting */}
       <AutoSetting onAutoFill={handleAutoFill} />
 
       {/* ปุ่ม Confirm */}
@@ -338,4 +327,6 @@ export default function ChooseMinionType() {
       />
     </div>
   );
-}
+};
+
+export default ChooseMinionType;
