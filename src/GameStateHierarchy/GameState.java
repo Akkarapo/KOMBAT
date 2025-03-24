@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static com.example.demo.src.Utilities.Direction.*;
 import static java.lang.Math.*;
 
 public class GameState {
@@ -234,9 +235,63 @@ public class GameState {
             }//ปีกกา else if human or bot
 
             Map<Integer, int[]> minions = currentPlayer.minionsPlayerHave();
-            for (Integer minionKey : minions.keySet()) {
-                while(true){
-                    // read Strategy and do something
+            for (Map.Entry<Integer, int[]> entry : minions.entrySet()) {
+                boolean minionEnd = true;
+                while(minionEnd){
+
+                    // read Strategy and do something get command
+
+                    String  Command,subCommand;
+                    int     cost;
+
+                    int[] minionNowHex = new int[]{entry.getValue()[0],entry.getValue()[1]};
+                    int[] targetHex;
+
+                    //if(){}
+                    if(Command == "random"){ //incomplete
+                        new Random().nextInt(999);
+                    }
+                    else if(Command == "opponent"){
+                        //incomplete
+                        String targetToFind = currentPlayer.getPlayerNumber()== "001" ? "002" : "001" ;
+                        findNearestMinionDistance(minionNowHex,targetToFind);
+                    }
+                    else if(Command == "ally"){
+                        //incomplete
+                        String targetToFind = currentPlayer.getPlayerNumber();
+                        findNearestMinionDistance(minionNowHex,targetToFind);
+                    }
+                    else if(Command == "nearby"){
+                        if(subCommand == "up")               nearbyUp(targetHex, currentPlayer.getPlayerNumber());
+                        else if(subCommand == "upright")     nearbyUpRight(targetHex,currentPlayer.getPlayerNumber());
+                        else if(subCommand == "downright")   nearbyDownRight(targetHex,currentPlayer.getPlayerNumber());
+                        else if(subCommand == "down")        nearbyDown(targetHex,currentPlayer.getPlayerNumber());
+                        else if(subCommand == "downleft")    nearbyDownLeft(targetHex,currentPlayer.getPlayerNumber());
+                        else if(subCommand == "upleft")      nearbyUpLeft(targetHex,currentPlayer.getPlayerNumber());
+                    }
+                    else if(Command == "shoot"){
+                        if(subCommand == "up"){ targetHex = up(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "upright"){ targetHex = upright(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "downright"){ targetHex = downright(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "down"){ targetHex = down(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "downleft"){targetHex = downleft(minionNowHex[0],minionNowHex[1]);}
+                        else if(subCommand == "upleft"){targetHex = upleft(minionNowHex[0],minionNowHex[1]);}
+                        attackEnemy(targetHex,minionNowHex,cost);
+                    }
+                    else if(Command == "move"){
+                        targetHex = new int[]{-1,-1};
+                        if(subCommand == "up"){ targetHex = up(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "upright"){ targetHex = upright(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "downright"){ targetHex = downright(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "down"){ targetHex = down(minionNowHex[0],minionNowHex[1]); }
+                        else if(subCommand == "downleft"){targetHex = downleft(minionNowHex[0],minionNowHex[1]);}
+                        else if(subCommand == "upleft"){targetHex = upleft(minionNowHex[0],minionNowHex[1]);}
+
+                        if(targetHex[0] == -1){ minionEnd = false; }
+                        else{ moveMinion(targetHex,minionNowHex);}
+                    }
+                    else if(Command == "done"){ minionEnd = false; }
+
                 }
             }
 
@@ -339,6 +394,117 @@ public class GameState {
 
             showBoard();
         }
+    }
+
+    //หาแบบตามเข็มนาฬิกา
+    private int[] findNearestMinionDistance(int[] targetHex,String target){
+        int[] nearestMinionHex = new int[]{-1,-1};
+        int distance = 0;
+
+        //up
+        if(targetHex[0] != 0){
+            for(int i = targetHex[0]-1; i>=0; i--){
+                if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
+                    nearestMinionHex = new int[]{i,targetHex[1]};
+                    distance = targetHex[0] - i;
+
+                    if(distance == 1) return nearestMinionHex;
+                }
+            }
+        }
+
+        //upright
+        if(targetHex[1] != 7 || !(targetHex[0] == 0 && (targetHex[1] % 2 == 1) ) ){
+            int row = targetHex[1] % 2 == 0 ? targetHex[0] : targetHex[0] - 1;
+            int col = targetHex[1]+1;
+            while(true){
+                if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
+                    if(col - targetHex[1] < distance){
+                        nearestMinionHex = new int[]{row,col};
+                        distance = col - targetHex[1];
+
+                        if(distance == 1) return nearestMinionHex;
+                    }
+                    break;
+                }
+                if(col == 7 || (col % 2 == 1 && row == 0) ) break;
+                row = col % 2 == 0 ? row : row - 1;
+                col++;
+            }
+        }
+
+        //downright
+        if(targetHex[1] != 7 || !(targetHex[0] == 7 && (targetHex[1] % 2 == 0) ) ){
+            int row = targetHex[1] % 2 == 0 ? targetHex[0]+1 : targetHex[0];
+            int col = targetHex[1]+1;
+            while(true){
+                if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
+                    if(col - targetHex[1] < distance){
+                        nearestMinionHex = new int[]{row,col};
+                        distance = col - targetHex[1];
+
+                        if(distance == 1) return nearestMinionHex;
+                    }
+                    break;
+                }
+                if(col == 7 || (col % 2 == 0 && row == 7) ) break;
+                row = col % 2 == 0 ? row+1 : row ;
+                col++;
+            }
+        }
+
+        //down
+        if(targetHex[0] != 7){
+            for(int i = targetHex[0]+1; i<=7; i++){
+                if(gameBoard[i][targetHex[1]].hasMinion() && gameBoard[i][targetHex[1]].getMinion().getOwnerName() == target){
+                    nearestMinionHex = new int[]{i,targetHex[1]};
+                    distance = i - targetHex[0];
+
+                    if(distance == 1) return nearestMinionHex;
+                }
+            }
+        }
+
+        //downleft
+        if(targetHex[1] != 0 || !(targetHex[0] == 7 && (targetHex[1] % 2 == 0) ) ){
+            int row = targetHex[1] % 2 == 0 ? targetHex[0]+1 : targetHex[0];
+            int col = targetHex[1]-1;
+            while(true){
+                if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
+                    if(col - targetHex[1] < distance){
+                        nearestMinionHex = new int[]{row,col};
+                        distance = targetHex[1] - col;
+
+                        if(distance == 1) return nearestMinionHex;
+                    }
+                    break;
+                }
+                if(col == 0 || (col % 2 == 0 && row == 7) ) break;
+                row = col % 2 == 0 ? row+1 : row;
+                col--;
+            }
+        }
+
+        if(targetHex[1] != 0 || !(targetHex[0] == 0 && (targetHex[1] % 2 == 1) ) ){
+            int row = targetHex[1] % 2 == 0 ? targetHex[0] : targetHex[0] - 1;
+            int col = targetHex[1]-1;
+            while(true){
+                if(gameBoard[row][col].hasMinion() && gameBoard[row][col].getMinion().getOwnerName() == target){
+                    if(col - targetHex[1] < distance){
+                        nearestMinionHex = new int[]{row,col};
+                        distance = col - targetHex[1];
+
+                        if(distance == 1) return nearestMinionHex;
+                    }
+                    break;
+                }
+                if(col == 0 || (col % 2 == 1 && row == 0) ) break;
+                row = col % 2 == 0 ? row : row - 1;
+                col--;
+            }
+        }
+
+        return nearestMinionHex;
     }
 
     private int nearbyUp(int[] targetHex,String target){
