@@ -2,12 +2,32 @@
 
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+
+// Import strategyData เพื่อให้มี default code สำหรับ Strategy 1, 2
 import { strategyData } from "../choose-strategy/strategyData";
 
 interface MinionStrategyInformationProps {
   minionId: number;
   onClose: () => void;
   hideBuyButton?: boolean;
+}
+
+/**
+ * parseStrategyAndCode
+ * - ถ้า strat มีรูปแบบ "Strategy X||encoded" จะคืน [ "Strategy X", decodeURIComponent(encoded) ]
+ * - ถ้า strat เป็น "Strategy X" อย่างเดียว จะคืน [ "Strategy X", strategyData[strat] || "" ]
+ */
+function parseStrategyAndCode(strat: string): [string, string] {
+  if (strat.includes("||")) {
+    const [name, encoded] = strat.split("||");
+    try {
+      return [name.trim(), decodeURIComponent(encoded)];
+    } catch (e) {
+      // fallback หาก decode ไม่ได้
+      return [name.trim(), encoded];
+    }
+  }
+  return [strat, strategyData[strat] || ""];
 }
 
 const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
@@ -17,24 +37,34 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
 }) => {
   const searchParams = useSearchParams();
 
-  // ดึงข้อมูลมินเนี่ยน
+  // ดึงข้อมูลมินเนี่ยนจาก defenseData ใน URL
   const defenseDataString = searchParams.get("defenseData") || "";
   const defenseDataArray = defenseDataString
     ? defenseDataString.split(",").map((entry) => {
         const [id, name, defense, strategy] = entry.split(":");
-        return { id: Number(id), name: decodeURIComponent(name), defense: Number(defense), strategy };
+        return {
+          id: Number(id),
+          name: decodeURIComponent(name),
+          defense: Number(defense),
+          strategy,
+        };
       })
     : [];
 
   const minion = defenseDataArray.find((m) => m.id === minionId);
   if (!minion) return null;
 
-  const hp = parseInt(searchParams.get("init_hp") || "0");
+  const hp = parseInt(searchParams.get("init_hp") || "0", 10);
   const spawnCost = searchParams.get("spawn_cost") || "0";
   const image = `/CardMinion${minion.id}.png`;
 
+  // ใช้ helper parseStrategyAndCode เพื่อแยกชื่อ strategy และ custom code (ถ้ามี)
+  const [strategyName, customCode] = parseStrategyAndCode(minion.strategy);
+  // ถ้าเป็น Strategy 3 ให้ใช้ customCode (ถ้ามี) แต่ถ้าไม่มีก็ให้ใช้ข้อความ "No strategy assigned."
   const strategyText =
-    minion.strategy && strategyData[minion.strategy] ? strategyData[minion.strategy] : "No strategy assigned.";
+    strategyName === "Strategy 3"
+      ? customCode || "No strategy assigned."
+      : strategyData[strategyName] || "No strategy assigned.";
 
   return (
     <motion.div
@@ -49,14 +79,10 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
           display: "flex",
           flexDirection: "row",
           backgroundColor: "transparent",
-          // ลบ padding เดิมออก
           padding: 0,
           maxWidth: "1000px",
-          // เดิมเคย width: "100%" -> ถ้าอยากให้กว้างเต็ม, ยังได้
-          // แต่หากกว้างเกินจนเห็นแถบขาว ให้ลดเป็น auto หรือปรับตามต้องการ
           width: "auto",
           alignItems: "center",
-          // gap ถ้าต้องการระยะห่างนิดหน่อยระหว่างการ์ดกับกล่อง Strategy
           gap: "10px",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -76,15 +102,12 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
           >
             {minion.name}
           </h2>
-
           <div style={{ position: "relative", width: "190px", height: "250px" }}>
             <img
               src={image}
               alt={minion.name}
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
-
-            {/* แสดง spawnCost / defense / hp */}
             <div
               style={{
                 position: "absolute",
@@ -122,8 +145,6 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
               {hp}
             </div>
           </div>
-
-          {/* ปุ่ม BUY ถ้าไม่ hideBuyButton */}
           {!hideBuyButton && (
             <motion.button
               onClick={(e) => {
@@ -154,8 +175,6 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
             height: "500px",
             display: "flex",
             flexDirection: "column",
-            // ลบ marginLeft ถ้ามี
-            // marginLeft: 0,
           }}
         >
           <h2
@@ -188,7 +207,6 @@ const MinionStrategyInformation: React.FC<MinionStrategyInformationProps> = ({
         </div>
       </motion.div>
 
-      {/* CSS Scrollbar */}
       <style jsx>{`
         ::-webkit-scrollbar {
           width: 8px;
