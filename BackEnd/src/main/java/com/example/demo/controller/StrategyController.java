@@ -11,7 +11,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api")
-// @CrossOrigin(origins = "http://localhost:3000") // << ใส่หรือไม่ก็ได้ ถ้าใช้ Global Config
+@CrossOrigin(origins = "http://localhost:3000") // สามารถเพิ่มได้ถ้าจำเป็น
 public class StrategyController {
 
     @PostMapping("/parseStrategy")
@@ -28,20 +28,28 @@ public class StrategyController {
                 ? (Map<String, Object>) body.get("gameState")
                 : new HashMap<>();
 
-        // 3) Parser
+        // Log ข้อมูลที่ได้รับ (สำหรับ debugging)
+        System.out.println("Received strategy: " + strategyCode);
+        System.out.println("Received gameState: " + gameState);
+
+        // 3) Parser: สร้าง tokenizer, parser แล้ว parse เป็น AST
         Tokenizer tkz = new Tokenizer(strategyCode);
         StatementParser parser = new StatementParser(tkz);
         Node ast = parser.parse();
 
-        // 4) Interpreter
+        // 4) Interpreter: ใช้ StrategyInterpreter ประมวลผล AST และ gameState
         StrategyInterpreter interpreter = new StrategyInterpreter();
-        // สมมติว่า interpret(...) รองรับการรับ Node + gameState
-        // ถ้ายังไม่รองรับ ก็แก้เป็น interpret(ast) เฉย ๆ
+        // สมมติว่า interpret รองรับการรับ Node และ gameState
         List<Map<String, Object>> actions = interpreter.interpret(ast, gameState);
 
-        // 5) ส่งกลับ
+        // 5) สร้าง debugInfo (เพื่อส่งกลับไปให้ FrontEnd และ log บน server)
+        String debugInfo = "Parsed strategy: " + strategyCode + " with gameState: " + gameState.toString();
+        System.out.println("Debug info: " + debugInfo);
+
+        // 6) สร้าง response JSON โดยใส่ actions และ debugInfo
         Map<String, Object> result = new HashMap<>();
         result.put("actions", actions);
+        result.put("debug", debugInfo);
         return result;
     }
 }

@@ -1,29 +1,26 @@
 package com.example.demo.parser;
 
-import com.example.demo.ast.Node;
-import com.example.demo.ast.Plan;
-import com.example.demo.ast.AssignmentNode;
-import com.example.demo.ast.WhileNode;
-import com.example.demo.ast.IfNode;
-import com.example.demo.ast.BlockNode;
-import com.example.demo.ast.expression.BinaryArithExpr;
-import com.example.demo.ast.expression.NumberExpr;
-import com.example.demo.ast.expression.Identifier;
-import com.example.demo.ast.expression.Opponent;
-import com.example.demo.ast.expression.Nearby;
-import com.example.demo.ast.ActionCommand;
+import com.example.demo.ast.*;
+import com.example.demo.ast.expression.*;
 import com.example.demo.exception.SyntaxError;
 import com.example.demo.tokenizer.Tokenizer;
+
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isDigit;
+
 import java.util.LinkedList;
 import java.util.List;
 
 public class StatementParser implements Parser {
     protected final Tokenizer tkz;
+    
+    // สมมติคุณมี enum Command ใน com.example.demo.ast
+    // เช่น: public enum Command { move, shoot, done, ... }
+
     private static final String[] reservedWords = {
         "ally", "done", "down", "downleft", "downright", "else", "if",
-        "invest", "move", "nearby", "opponent", "relocate", "shoot", "then", "up", "upleft", "upright", "while"
+        "invest", "move", "nearby", "opponent", "relocate", "shoot", "then", 
+        "up", "upleft", "upright", "while"
     };
 
     public StatementParser(Tokenizer tkz) {
@@ -56,11 +53,11 @@ public class StatementParser implements Parser {
                     Node expr = parseExpression();
                     return new AssignmentNode(id, expr);
                 } else {
-                    // ไม่ใช่ assignment ให้พิจารณาเป็น action command
+                    // ไม่ใช่ assignment => อาจเป็น action command
                     return parseActionCommand(id);
                 }
             }
-            // Default: parse as action command
+            // ถ้าไม่ใช่ identifier => parse action command แบบไม่ระบุ id
             return parseActionCommand(null);
         }
     }
@@ -107,29 +104,45 @@ public class StatementParser implements Parser {
         return new BlockNode(statements);
     }
 
-    /**
-     * parseActionCommand:
-     * หาก parameter id ไม่เป็น null หมายถึง identifier ถูก consume แล้ว
-     * จากนั้นตรวจสอบ token เพื่อดูว่าเป็น command หรือไม่
-     */
     private Node parseActionCommand(String id) throws SyntaxError {
         String token = (id != null) ? id : tkz.consume();
         try {
+            // พยายามแปลง token เป็น Command enum
             Command cmd = Command.valueOf(token);
-            // สำหรับคำสั่งที่อาจมี direction หรือ cost
+            // ถ้าเป็น move หรือ shoot อาจมี direction ต่อท้าย
             if ((cmd == Command.move || cmd == Command.shoot) && tkz.hasNextToken()) {
-                String direction = tkz.consume();
-                if (cmd == Command.shoot && tkz.peek("cost")) {
-                    tkz.consume("cost");
-                    Node costExpr = parseExpression();
-                    return new ActionCommand(cmd, direction, costExpr);
+                String direction = tkz.peek();
+                // ถ้าทิศทางเป็น reservedWords เช่น up, downleft, downright
+                // หรือเป็น identifier (เช่น cost)
+                if (!reservedWordsContain(direction) && !isIdentifier(direction)) {
+                    // ถ้า direction ไม่ตรง
+                    // อาจ skip หรือ throw error
+                } else {
+                    direction = tkz.consume();
+                    // ถ้าคำสั่ง shoot cost ...
+                    if (cmd == Command.shoot && tkz.peek("cost")) {
+                        tkz.consume("cost");
+                        Node costExpr = parseExpression();
+                        return new ActionCommand(cmd, direction, costExpr);
+                    }
+                    return new ActionCommand(cmd, direction);
                 }
-                return new ActionCommand(cmd, direction);
             }
+            // ไม่เจอ direction => เป็น command เดี่ยว ๆ
             return new ActionCommand(cmd);
         } catch (IllegalArgumentException e) {
+            // ถ้า token ไม่ match enum => default done
             return new ActionCommand(Command.done);
         }
+    }
+
+    private boolean reservedWordsContain(String token) {
+        for (String rv : reservedWords) {
+            if (token.equals(rv)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Expression Parser

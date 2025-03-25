@@ -12,12 +12,9 @@ import InformationForPlayers from "./InformationForPlayers";
 import MinionStrategyInformation from "./minionStrategyInformation";
 import { initialGreenHexes, GreenHexData } from "../../components/dataGreen";
 import { initialRedHexes, RedHexData } from "../../components/dataRed";
-
-// ---- ใช้ hook useStrategy จาก useStrategy เท่านั้น (ไม่ต้อง import parseStrategy) ----
 import MinionActions from "../choose-strategy/minionActions";
 import { Action, GameState, useStrategy } from "../choose-strategy/useStrategy";
-
-import MoreButtonPopUp from "../game/moreButtonPopUp"; // ถ้ามีปุ่ม More
+import MoreButtonPopUp from "../game/moreButtonPopUp";
 
 // ---------- ตัวแปร style สำหรับ Player / Blooming ----------
 const playerRedStyle = {

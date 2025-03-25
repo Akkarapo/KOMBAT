@@ -319,7 +319,7 @@ const ChooseMinionType: React.FC = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="absolute bottom-[45px] left-[270px] w-[180px] h-[45px] bg-contain bg-no-repeat"
+        className="absolute bottom-[45px] left-[220px] w-[180px] h-[45px] bg-contain bg-no-repeat"
         style={{ backgroundImage: "url('/HomeButton.png')", zIndex: 50 }}
       />
 

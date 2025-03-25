@@ -68,7 +68,7 @@ export default function HowToDuelPage() {
               </motion.h1>
             </div>
 
-            {/* ❌ ปุ่มปิด */}
+            {/* ปุ่มปิด */}
             <motion.button
               className="hover:opacity-80"
               onClick={() => router.push("/choose-minions")}
