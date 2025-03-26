@@ -1,0 +1,10 @@
+{
+  "/page": "app/page.js",
+  "/pageMenu/page": "app/pageMenu/page.js",
+  "/how-to-duel/page": "app/how-to-duel/page.js",
+  "/choose-minions/page": "app/choose-minions/page.js",
+  "/choose-a-minion-type/page": "app/choose-a-minion-type/page.js",
+  "/configurationPage/page": "app/configurationPage/page.js",
+  "/loadingPage/page": "app/loadingPage/page.js",
+  "/game/page": "app/game/page.js"
+}
